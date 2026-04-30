@@ -1,0 +1,18 @@
+id: nopaystation
+name: NoPayStation
+homepage: https://nopaystation.com
+kind: catalog
+priority: 80
+auth:
+  required: false
+capabilities:
+  - http_range_resume
+  - filename_listing
+  - generates_keys     # produces RAP/ZRIF key files alongside ROM links
+platforms:
+  - ps3
+  - psv
+notes: |
+  PS3/PSV catalog. Generates RAP and ZRIF key files into static/content/
+  during scrape so they can be served alongside the gzipped catalog DB
+  from the same GitHub raw mirror.
