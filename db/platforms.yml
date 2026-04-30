@@ -1,0 +1,1932 @@
+# Per-platform source routing.
+# For each platform, list the sources to scrape and how.
+# Source id must match a folder under db/sources/.
+# Generated from the legacy sources.json; safe to hand-edit.
+
+nes:
+- source: myrient
+  format: nes
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headered%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headerless%29%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+fds:
+- source: myrient
+  format: fds
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Family%20Computer%20Disk%20System%20%28FDS%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: qd
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Family%20Computer%20Disk%20System%20%28QD%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+snes:
+- source: myrient
+  format: sfc
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+gb:
+- source: myrient
+  format: gb
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+gbc:
+- source: myrient
+  format: gbc
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Color/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Color%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+gba:
+- source: myrient
+  format: gba
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance%20%28Multiboot%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance%20%28Private%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance%20%28Video%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: asf
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance%20%28Play-Yan%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+min:
+- source: myrient
+  format: min
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Pokemon%20Mini/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+vb:
+- source: myrient
+  format: vb
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Virtual%20Boy/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Virtual%20Boy%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+n64:
+- source: myrient
+  format: z64
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20%28BigEndian%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20%28BigEndian%29%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+ndd:
+- source: myrient
+  format: ndd
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064DD/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+gc:
+- source: myrient
+  format: rvz
+  urls:
+  - https://myrient.erista.me/files/Redump/Nintendo%20-%20GameCube%20-%20NKit%20RVZ%20%5Bzstd-19-128k%5D/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/Unknown/RedumpNintendoGameCubeAmerica/
+  - https://myrient.erista.me/files/Internet%20Archive/Unknown/RedumpNintendoGameCubeAmericaPart2/
+  - https://myrient.erista.me/files/Internet%20Archive/Unknown/RedumpNintendoGameCubeAmericaPart3/
+  - https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/AustraliaGamecubeCollectionByGhostware/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: iso
+  regions:
+  - eu
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/EuropeanGamecubeCollectionByGhostware/
+  filter: (.*)\.iso
+  type: Game
+  parsers:
+    no_intro:
+      parse_title_regions: false
+      clean_title_contents: false
+      move_title_article: true
+    gametdb: {}
+- source: myrient
+  format: iso
+  regions:
+  - jp
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/AsiaGamecubeCollectionByGhostware/
+  filter: (.*)\.iso
+  type: Game
+  parsers:
+    no_intro:
+      parse_title_regions: false
+      clean_title_contents: false
+      move_title_article: true
+    gametdb: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/AsiaGamecubeCollectionByGhostware
+  filter: (.*)\.iso
+  type: Game
+  parsers:
+    no_intro:
+      parse_title_regions: false
+      clean_title_contents: false
+      move_title_article: true
+    gametdb: {}
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/pixelspoil/NCubeJ/
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/NCubeJ
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+nds:
+- source: myrient
+  format: nds
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20%28Decrypted%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20%28Decrypted%29%20%28Private%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20%28Download%20Play%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: img
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20%28DSvision%20SD%20cards%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+dsi:
+- source: myrient
+  format: dsi
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DSi%20%28Decrypted%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: mariocube
+  format: nds
+  urls:
+  - https://repo.mariocube.com/DSiWare/NDS/%23/
+  - https://repo.mariocube.com/DSiWare/NDS/A/
+  - https://repo.mariocube.com/DSiWare/NDS/B/
+  - https://repo.mariocube.com/DSiWare/NDS/C/
+  - https://repo.mariocube.com/DSiWare/NDS/D/
+  - https://repo.mariocube.com/DSiWare/NDS/E/
+  - https://repo.mariocube.com/DSiWare/NDS/F/
+  - https://repo.mariocube.com/DSiWare/NDS/G/
+  - https://repo.mariocube.com/DSiWare/NDS/H/
+  - https://repo.mariocube.com/DSiWare/NDS/I/
+  - https://repo.mariocube.com/DSiWare/NDS/J/
+  - https://repo.mariocube.com/DSiWare/NDS/K/
+  - https://repo.mariocube.com/DSiWare/NDS/L/
+  - https://repo.mariocube.com/DSiWare/NDS/M/
+  - https://repo.mariocube.com/DSiWare/NDS/N/
+  - https://repo.mariocube.com/DSiWare/NDS/O/
+  - https://repo.mariocube.com/DSiWare/NDS/P/
+  - https://repo.mariocube.com/DSiWare/NDS/Q/
+  - https://repo.mariocube.com/DSiWare/NDS/R/
+  - https://repo.mariocube.com/DSiWare/NDS/S/
+  - https://repo.mariocube.com/DSiWare/NDS/T/
+  - https://repo.mariocube.com/DSiWare/NDS/U/
+  - https://repo.mariocube.com/DSiWare/NDS/V/
+  - https://repo.mariocube.com/DSiWare/NDS/W/
+  - https://repo.mariocube.com/DSiWare/NDS/X/
+  - https://repo.mariocube.com/DSiWare/NDS/Y/
+  - https://repo.mariocube.com/DSiWare/NDS/Z/
+  filter: (.*)\.nds
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: nds
+  urls:
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/%23/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/A/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/B/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/C/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/D/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/E/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/F/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/G/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/H/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/I/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/J/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/K/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/L/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/M/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/N/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/O/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/P/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/Q/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/R/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/S/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/T/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/U/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/V/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/W/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/X/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/Y/
+  - https://archive.org/download/MarioCubeLite/DSiWare/NDS/Z/
+  filter: (.*)\.nds
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: DUMP
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DSi%20%28Digital%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: CDN
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DSi%20%28Digital%29%20%28CDN%29%20%28Decrypted%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+wii:
+- source: myrient
+  format: rvz
+  urls:
+  - https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20-%20NKit%20RVZ%20%5Bzstd-19-128k%5D/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Non-Redump%20-%20Nintendo%20-%20Wii/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: wbfs
+  regions:
+  - us
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/WiiRomSetByGhostware/
+  - https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/WiiRomSetByGhostwarePart2/
+  - https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/WiiRomSetByGhostwarePart3/
+  filter: (.*)\.wbfs
+  type: Game
+  parsers:
+    wii_rom_set_by_ghostware: {}
+    gametdb: {}
+- source: myrient
+  format: wad
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Nintendo%20-%20Wii%20%28Digital%29%20%28Deprecated%29%20%28WAD%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: mariocube
+  format: wad
+  urls:
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/0-9/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/A/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/B/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/C/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/D/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/E/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/F/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/G/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/H/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/I/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/J/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/K/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/L/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/M/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/N/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/O/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/P/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/Q/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/R/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/S/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/T/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/U/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/V/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/W/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/X/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/Y/
+  - https://repo.mariocube.com/WADs/_WiiWare,%20VC,%20DLC,%20Channels%20&%20IOS/Z/
+  filter: (.*)\.wad
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: wad
+  urls:
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/%23/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/A/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/B/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/C/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/D/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/E/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/F/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/G/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/H/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/I/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/J/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/K/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/L/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/M/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/N/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/O/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/P/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/Q/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/R/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/S/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/T/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/U/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/V/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/W/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/X/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/Y/
+  - https://archive.org/download/MarioCubeLite/WADs/_WiiWare%2C%20VC%2C%20DLC%2C%20Channels%20%26%20IOS/Z/
+  filter: (.*)\.wad
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: DUMP
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Wii%20%28Digital%29%20%28CDN%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+3ds:
+- source: myrient
+  format: 3ds
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Decrypted%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Digital%29%20%28Deprecated%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: 3ds
+  urls:
+  - https://archive.org/download/3ds-main-encrypted
+  - https://archive.org/download/3ds-main-encrypted-p2
+  filter: (.*)\.7z
+  type: Game (Encrypted)
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: CDN
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Digital%29%20%28CDN%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Digital%29%20%28Pre-Install%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: cia
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Digital%29%20%28Dev%20ROMs%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+n3ds:
+- source: myrient
+  format: 3ds
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20New%20Nintendo%203DS%20%28Decrypted%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: CDN
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20New%20Nintendo%203DS%20%28Digital%29%20%28Deprecated%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+wiiu:
+- source: myrient
+  format: CDN
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Wii%20U%20%28Digital%29%20%28CDN%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Wii%20U%20%28Digital%29%20%28CDN%29%20%28Dev%29/
+  - https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Wii%20U%20%28Digital%29%20%28CDN%29%20%28Lotcheck%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: GAME FILES
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Nintendo%20-%20Wii%20U%20%28Digital%29%20%28Deprecated%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: wux
+  urls:
+  - https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20U%20-%20WUX/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: key
+  urls:
+  - https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20U%20-%20Disc%20Keys/
+  filter: (.*)\.zip
+  type: Disc Key
+  parsers:
+    no_intro: {}
+- source: myrient
+  format: wud
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Non-Redump%20-%20Nintendo%20-%20Wii%20U/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: wua
+  regions:
+  - us
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/
+  filter: (.*)\.wua
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: wua
+  regions:
+  - eu
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/Europe/
+  filter: (.*)\.wua
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: wua
+  regions:
+  - us
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-eshop-usa-full-set-wua-format-embedded-dlc-updates/
+  filter: (.*)\.wua
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: wua
+  regions:
+  - eu
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-eshop-usa-full-set-wua-format-embedded-dlc-updates/Europe/
+  filter: (.*)\.wua
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: wua
+  regions:
+  - jp
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-eshop-usa-full-set-wua-format-embedded-dlc-updates/Japan/
+  filter: (.*)\.wua
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+ps1:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/sony_playstation_part1
+  - https://archive.org/download/sony_playstation_part2
+  - https://archive.org/download/sony_playstation_part3
+  - https://archive.org/download/sony_playstation_part4
+  - https://archive.org/download/sony_playstation_part5
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - us
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx/CHD-PSX-USA/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  regions:
+  - us
+  urls:
+  - https://archive.org/download/chd_psx/CHD-PSX-USA/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - eu
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  regions:
+  - eu
+  urls:
+  - https://archive.org/download/chd_psx_eur/CHD-PSX-EUR/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - jp
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_jap/CHD-PSX-JAP/
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_jap_p2/CHD-PSX-JAP/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  regions:
+  - jp
+  urls:
+  - https://archive.org/download/chd_psx_jap/CHD-PSX-JAP/
+  - https://archive.org/download/chd_psx_jap_p2/CHD-PSX-JAP/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_misc/CHD-PSX-Misc/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  urls:
+  - https://archive.org/download/chd_psx_misc/CHD-PSX-Misc/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Non-Redump%20-%20Sony%20-%20PlayStation/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+ps2:
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/sony_playstation2_numberssymbols
+  - https://archive.org/download/sony_playstation2_a
+  - https://archive.org/download/sony_playstation2_b
+  - https://archive.org/download/sony_playstation2_c
+  - https://archive.org/download/sony_playstation2_d_part1
+  - https://archive.org/download/sony_playstation2_d_part2
+  - https://archive.org/download/sony_playstation2_e
+  - https://archive.org/download/sony_playstation2_f
+  - https://archive.org/download/sony_playstation2_g
+  - https://archive.org/download/sony_playstation2_h
+  - https://archive.org/download/sony_playstation2_i
+  - https://archive.org/download/sony_playstation2_j
+  - https://archive.org/download/sony_playstation2_k
+  - https://archive.org/download/sony_playstation2_l
+  - https://archive.org/download/sony_playstation2_m_part1
+  - https://archive.org/download/sony_playstation2_m_part2
+  - https://archive.org/download/sony_playstation2_n
+  - https://archive.org/download/sony_playstation2_o_part1
+  - https://archive.org/download/sony_playstation2_o_part2
+  - https://archive.org/download/sony_playstation2_p
+  - https://archive.org/download/sony_playstation2_q
+  - https://archive.org/download/sony_playstation2_r
+  - https://archive.org/download/sony_playstation2_s_part1
+  - https://archive.org/download/sony_playstation2_s_part2
+  - https://archive.org/download/sony_playstation2_s_part3
+  - https://archive.org/download/sony_playstation2_s_part4
+  - https://archive.org/download/sony_playstation2_t
+  - https://archive.org/download/sony_playstation2_u
+  - https://archive.org/download/sony_playstation2_v
+  - https://archive.org/download/sony_playstation2_w
+  - https://archive.org/download/sony_playstation2_x
+  - https://archive.org/download/sony_playstation2_z
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: bin
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Non-Redump%20-%20Sony%20-%20PlayStation%202/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+psp:
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%20Portable/
+  - https://myrient.erista.me/files/No-Intro/Non-Redump%20-%20Sony%20-%20PlayStation%20Portable/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/sony_playstation_portable_part1
+  - https://archive.org/download/sony_playstation_portable_part2
+  - https://archive.org/download/sony_playstation_portable_part3
+  - https://archive.org/download/sony_playstation_portable_part4
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/psp-chd-zstd-redump-part1/psp-chd-zstd/
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/psp-chd-zstd-redump-part2/psp-chd-zstd/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  urls:
+  - https://archive.org/download/psp-chd-zstd-redump-part1/psp-chd-zstd/
+  - https://archive.org/download/psp-chd-zstd-redump-part2/psp-chd-zstd/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/PSNCollectionByGhostware
+  filter: (.*)\.iso
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+ps3:
+- source: nopaystation
+  format: pkg
+  urls:
+  - https://nopaystation.com/tsv/PS3_GAMES.tsv
+  - https://nopaystation.com/tsv/PS3_DEMOS.tsv
+  filter: null
+  type: Game
+  parsers:
+    gametdb: {}
+- source: nopaystation
+  format: pkg
+  urls:
+  - https://nopaystation.com/tsv/PS3_DLCS.tsv
+  filter: null
+  type: DLC
+  parsers:
+    gametdb: {}
+- source: myrient
+  format: pkg/rap
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Sony%20-%20PlayStation%203%20(PSN)%20(Content)/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: pkg/rap
+  regions:
+  - us
+  urls:
+  - https://archive.org/download/PS3_NOINTRO_USA_1
+  - https://archive.org/download/PS3_NOINTRO_USA_2
+  - https://archive.org/download/PS3_NOINTRO_USA_3
+  - https://archive.org/download/PS3_NOINTRO_USA_4
+  - https://archive.org/download/PS3_NOINTRO_USA__5
+  - https://archive.org/download/PS3_NOINTRO_USA_6
+  - https://archive.org/download/PS3_NOINTRO_USA_7
+  - https://archive.org/download/PS3_NOINTRO_USA_8
+  - https://archive.org/download/PS3_NOINTRO_USA_9
+  - https://archive.org/download/PS3_NOINTRO_USA_10
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: pkg/rap
+  regions:
+  - eu
+  urls:
+  - https://archive.org/download/PS3_NOINTRO_EUR_1
+  - https://archive.org/download/PS3_NOINTRO_EUR_2
+  - https://archive.org/download/PS3_NOINTRO_EUR_3
+  - https://archive.org/download/PS3_NOINTRO_EUR_4
+  - https://archive.org/download/PS3_NOINTRO_EUR_5
+  - https://archive.org/download/PS3_NOINTRO_EUR_6
+  - https://archive.org/download/PS3_NOINTRO_EUR_7
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: pkg/rap
+  regions:
+  - jp
+  urls:
+  - https://archive.org/download/PS3_NOINTRO_JAP_1
+  - https://archive.org/download/PS3_NOINTRO_JAP_2
+  - https://archive.org/download/PS3_NOINTRO_JAP_3
+  - https://archive.org/download/PS3_NOINTRO_JAP_4
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%203/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/sony_playstation3_numberssymbols
+  - https://archive.org/download/sony_playstation3_a_part1
+  - https://archive.org/download/sony_playstation3_a_part2
+  - https://archive.org/download/sony_playstation3_a_part3
+  - https://archive.org/download/sony_playstation3_b_part1
+  - https://archive.org/download/sony_playstation3_b_part2
+  - https://archive.org/download/sony_playstation3_b_part3
+  - https://archive.org/download/sony_playstation3_c_part1
+  - https://archive.org/download/sony_playstation3_c_part2
+  - https://archive.org/download/sony_playstation3_c_part3
+  - https://archive.org/download/sony_playstation3_d_part1
+  - https://archive.org/download/sony_playstation3_d_part2
+  - https://archive.org/download/sony_playstation3_d_part3
+  - https://archive.org/download/sony_playstation3_d_part4
+  - https://archive.org/download/sony_playstation3_d_part5
+  - https://archive.org/download/sony_playstation3_e
+  - https://archive.org/download/sony_playstation3_f_part1
+  - https://archive.org/download/sony_playstation3_f_part2
+  - https://archive.org/download/sony_playstation3_f_part3
+  - https://archive.org/download/sony_playstation3_g_part1
+  - https://archive.org/download/sony_playstation3_g_part2
+  - https://archive.org/download/sony_playstation3_g_part3
+  - https://archive.org/download/sony_playstation3_h_part1
+  - https://archive.org/download/sony_playstation3_h_part2
+  - https://archive.org/download/sony_playstation3_i
+  - https://archive.org/download/sony_playstation3_j
+  - https://archive.org/download/sony_playstation3_k
+  - https://archive.org/download/sony_playstation3_l_part1
+  - https://archive.org/download/sony_playstation3_l_part2
+  - https://archive.org/download/sony_playstation3_l_part3
+  - https://archive.org/download/sony_playstation3_m_part1
+  - https://archive.org/download/sony_playstation3_m_part2
+  - https://archive.org/download/sony_playstation3_m_part3
+  - https://archive.org/download/sony_playstation3_m_part4
+  - https://archive.org/download/sony_playstation3_m_part5
+  - https://archive.org/download/sony_playstation3_n_part1
+  - https://archive.org/download/sony_playstation3_n_part2
+  - https://archive.org/download/sony_playstation3_n_part3
+  - https://archive.org/download/sony_playstation3_o_part1
+  - https://archive.org/download/sony_playstation3_o_part2
+  - https://archive.org/download/sony_playstation3_o_part3
+  - https://archive.org/download/sony_playstation3_p_part1
+  - https://archive.org/download/sony_playstation3_p_part2
+  - https://archive.org/download/sony_playstation3_q
+  - https://archive.org/download/sony_playstation3_r_part1
+  - https://archive.org/download/sony_playstation3_r_part2
+  - https://archive.org/download/sony_playstation3_r_part3
+  - https://archive.org/download/sony_playstation3_r_part4
+  - https://archive.org/download/sony_playstation3_s_part1
+  - https://archive.org/download/sony_playstation3_s_part2
+  - https://archive.org/download/sony_playstation3_s_part3
+  - https://archive.org/download/sony_playstation3_s_part4
+  - https://archive.org/download/sony_playstation3_s_part5
+  - https://archive.org/download/sony_playstation3_s_part6
+  - https://archive.org/download/sony_playstation3_t_part1
+  - https://archive.org/download/sony_playstation3_t_part2
+  - https://archive.org/download/sony_playstation3_t_part3
+  - https://archive.org/download/sony_playstation3_t_part4
+  - https://archive.org/download/sony_playstation3_u_part1
+  - https://archive.org/download/sony_playstation3_u_part2
+  - https://archive.org/download/sony_playstation3_v
+  - https://archive.org/download/sony_playstation3_w_part1
+  - https://archive.org/download/sony_playstation3_w_part2
+  - https://archive.org/download/sony_playstation3_x
+  - https://archive.org/download/sony_playstation3_y
+  - https://archive.org/download/sony_playstation3_z
+  filter: (.*)\.iso
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+    gametdb: {}
+- source: myrient
+  format: key
+  urls:
+  - https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%203%20-%20Disc%20Keys/
+  filter: (.*)\.zip
+  type: Disc Key
+  parsers:
+    no_intro: {}
+- source: myrient
+  format: dkey
+  urls:
+  - https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%203%20-%20Disc%20Keys%20TXT/
+  filter: (.*)\.zip
+  type: Disc Key TXT
+  parsers:
+    no_intro: {}
+psv:
+- source: nopaystation
+  format: pkg
+  urls:
+  - https://nopaystation.com/tsv/PSV_GAMES.tsv
+  - https://nopaystation.com/tsv/PSV_DEMOS.tsv
+  filter: null
+  type: Game
+  parsers: {}
+- source: nopaystation
+  format: pkg
+  urls:
+  - https://nopaystation.com/tsv/PSV_DLCS.tsv
+  filter: null
+  type: DLC
+  parsers: {}
+- source: myrient
+  format: pkg
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Sony%20-%20PlayStation%20Vita%20(PSN)%20(Content)/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: psv
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Sony%20-%20PlayStation%20Vita%20(BlackFinPSV)/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: NoNpDrm
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Sony%20-%20PlayStation%20Vita%20(NoNpDrm)/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: vpk
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Sony%20-%20PlayStation%20Vita%20(PSN)%20(Decrypted)%20(VPK)/
+  - https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Sony%20-%20PlayStation%20Vita%20(VPK)/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: PSVgameSD
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Sony%20-%20PlayStation%20Vita%20(PSVgameSD)/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+xbox:
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/Redump/Microsoft%20-%20Xbox/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/microsoft_xbox_numberssymbols
+  - https://archive.org/download/microsoft_xbox_a
+  - https://archive.org/download/microsoft_xbox_b
+  - https://archive.org/download/microsoft_xbox_c_part1
+  - https://archive.org/download/microsoft_xbox_c_part2
+  - https://archive.org/download/microsoft_xbox_d_part1
+  - https://archive.org/download/microsoft_xbox_d_part2
+  - https://archive.org/download/microsoft_xbox_e
+  - https://archive.org/download/microsoft_xbox_f
+  - https://archive.org/download/microsoft_xbox_g
+  - https://archive.org/download/microsoft_xbox_h
+  - https://archive.org/download/microsoft_xbox_i
+  - https://archive.org/download/microsoft_xbox_j
+  - https://archive.org/download/microsoft_xbox_k
+  - https://archive.org/download/microsoft_xbox_l
+  - https://archive.org/download/microsoft_xbox_m_part1
+  - https://archive.org/download/microsoft_xbox_m_part2
+  - https://archive.org/download/microsoft_xbox_n_part1
+  - https://archive.org/download/microsoft_xbox_n_part2
+  - https://archive.org/download/microsoft_xbox_o_part1
+  - https://archive.org/download/microsoft_xbox_o_part2
+  - https://archive.org/download/microsoft_xbox_p
+  - https://archive.org/download/microsoft_xbox_q
+  - https://archive.org/download/microsoft_xbox_r
+  - https://archive.org/download/microsoft_xbox_s_part1
+  - https://archive.org/download/microsoft_xbox_s_part2
+  - https://archive.org/download/microsoft_xbox_t_part1
+  - https://archive.org/download/microsoft_xbox_t_part2
+  - https://archive.org/download/microsoft_xbox_u
+  - https://archive.org/download/microsoft_xbox_v
+  - https://archive.org/download/microsoft_xbox_w
+  - https://archive.org/download/microsoft_xbox_x
+  - https://archive.org/download/microsoft_xbox_y
+  - https://archive.org/download/microsoft_xbox_z
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+x360:
+- source: myrient
+  format: iso
+  urls:
+  - https://myrient.erista.me/files/Redump/Microsoft%20-%20Xbox%20360/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: iso
+  urls:
+  - https://archive.org/download/microsoft_xbox360_numberssymbols
+  - https://archive.org/download/microsoft_xbox360_a_part1
+  - https://archive.org/download/microsoft_xbox360_a_part2
+  - https://archive.org/download/microsoft_xbox360_b_part1
+  - https://archive.org/download/microsoft_xbox360_b_part2
+  - https://archive.org/download/microsoft_xbox360_c_part1
+  - https://archive.org/download/microsoft_xbox360_c_part2
+  - https://archive.org/download/microsoft_xbox360_d_part1
+  - https://archive.org/download/microsoft_xbox360_d_part2
+  - https://archive.org/download/microsoft_xbox360_d_part3
+  - https://archive.org/download/microsoft_xbox360_e
+  - https://archive.org/download/microsoft_xbox360_f_part1
+  - https://archive.org/download/microsoft_xbox360_f_part2
+  - https://archive.org/download/microsoft_xbox360_g
+  - https://archive.org/download/microsoft_xbox360_h
+  - https://archive.org/download/microsoft_xbox360_i
+  - https://archive.org/download/microsoft_xbox360_j
+  - https://archive.org/download/microsoft_xbox360_k
+  - https://archive.org/download/microsoft_xbox360_l
+  - https://archive.org/download/microsoft_xbox360_m_part1
+  - https://archive.org/download/microsoft_xbox360_m_part2
+  - https://archive.org/download/microsoft_xbox360_n_part1
+  - https://archive.org/download/microsoft_xbox360_n_part2
+  - https://archive.org/download/microsoft_xbox360_o
+  - https://archive.org/download/microsoft_xbox360_p
+  - https://archive.org/download/microsoft_xbox360_q
+  - https://archive.org/download/microsoft_xbox360_r
+  - https://archive.org/download/microsoft_xbox360_s_part1
+  - https://archive.org/download/microsoft_xbox360_s_part2
+  - https://archive.org/download/microsoft_xbox360_t_part1
+  - https://archive.org/download/microsoft_xbox360_t_part2
+  - https://archive.org/download/microsoft_xbox360_u
+  - https://archive.org/download/microsoft_xbox360_v
+  - https://archive.org/download/microsoft_xbox360_w
+  - https://archive.org/download/microsoft_xbox360_x_part1
+  - https://archive.org/download/microsoft_xbox360_x_part2
+  - https://archive.org/download/microsoft_xbox360_y
+  - https://archive.org/download/microsoft_xbox360_z
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: DIGITAL
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Microsoft%20-%20Xbox%20360%20(Digital)/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: DIGITAL
+  urls:
+  - https://archive.org/download/microsoft_xbox360_digital_part1
+  - https://archive.org/download/microsoft_xbox360_digital_part2
+  - https://archive.org/download/microsoft_xbox360_digital_part3
+  - https://archive.org/download/microsoft_xbox360_digital_part4
+  - https://archive.org/download/microsoft_xbox360_digital_part5
+  - https://archive.org/download/microsoft_xbox360_digital_part6
+  - https://archive.org/download/microsoft_xbox360_digital_part7
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+sms:
+- source: myrient
+  format: sms
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Sega%20-%20Master%20System%20-%20Mark%20III/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: sms
+  urls:
+  - https://archive.org/download/nointro.ms-mkiii
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+gg:
+- source: myrient
+  format: gg
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Sega%20-%20Game%20Gear/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: gg
+  urls:
+  - https://archive.org/download/nointro.gg
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+smd:
+- source: myrient
+  format: md
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Sega%20-%20Mega%20Drive%20-%20Genesis/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: md
+  urls:
+  - https://archive.org/download/nointro.md
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+scd:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Sega%20-%20Mega%20CD%20&%20Sega%20CD/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/sega_mega-cd_sega-cd
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - us
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_segacd/CHD-SegaCD-NTSC/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - eu
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_segacd/CHD-MegaCD-PAL/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - jp
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_segacd/CHD-MegaCD-NTSCJ/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_segacd/CHD-SegaCD-Bonus/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+32x:
+- source: myrient
+  format: 32x
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Sega%20-%2032X/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: 32x
+  urls:
+  - https://archive.org/download/nointro.32x
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+sat:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Sega%20-%20Saturn/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/sega_saturn
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - us
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_saturn/CHD-Saturn/USA/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  regions:
+  - us
+  urls:
+  - https://archive.org/download/chd_saturn/CHD-Saturn/USA/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - eu
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_saturn/CHD-Saturn/Europe/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  regions:
+  - eu
+  urls:
+  - https://archive.org/download/chd_saturn/CHD-Saturn/Europe/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  regions:
+  - jp
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_saturn/CHD-Saturn/Japan/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  regions:
+  - jp
+  urls:
+  - https://archive.org/download/chd_saturn/CHD-Saturn/Japan/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_saturn/CHD-Saturn/Other-Regions/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  urls:
+  - https://archive.org/download/chd_saturn/CHD-Saturn/Other-Regions/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+dc:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Sega%20-%20Dreamcast/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/sega_dreamcast
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  urls:
+  - https://archive.org/download/dc-chd-zstd-redump/dc-chd-zstd/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+mame:
+- source: myrient
+  format: rom
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/rompacker/mame-chds-roms-extras-complete/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    mame: {}
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: rom
+  urls:
+  - https://archive.org/download/mame-chds-roms-extras-complete
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    mame: {}
+    libretro: {}
+    no_intro: {}
+a26:
+- source: myrient
+  format: a26
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%202600/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: a26
+  urls:
+  - https://archive.org/download/nointro.atari-2600
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+a52:
+- source: myrient
+  format: a52
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%205200/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: a52
+  urls:
+  - https://archive.org/download/nointro.atari-5200
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+a78:
+- source: myrient
+  format: bin
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%207800%20%28BIN%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%207800%20%28BIN%29%20%28Aftermarket%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%207800%20%28BIN%29%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: a78
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%207800%20%28A78%29%20%28Aftermarket%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%207800%20%28A78%29%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: a78
+  urls:
+  - https://archive.org/download/nointro.atari-7800
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+lynx:
+- source: myrient
+  format: lnx
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28LNX%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28LNX%29%20%28Aftermarket%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28LNX%29%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: lnx
+  urls:
+  - https://archive.org/download/AtariLynxRomCollectionByGhostware
+  filter: (.*)\.lnx
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: lyx
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28LYX%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28LYX%29%20%28Aftermarket%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28LYX%29%20%28Private%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: bll
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28BLL%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Lynx%20%28BLL%29%20%28Aftermarket%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+jag:
+- source: myrient
+  format: j64
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28J64%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28J64%29%20%28Aftermarket%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: abs
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28ABS%29%20%28Aftermarket%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: cof
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28COF%29%20%28Aftermarket%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: rom
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28ROM%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28ROM%29%20%28Aftermarket%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: jag
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28JAG%29/
+  - https://myrient.erista.me/files/No-Intro/Atari%20-%20Atari%20Jaguar%20%28JAG%29%20%28Aftermarket%29/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: myrient
+  format: chd
+  urls:
+  - https://myrient.erista.me/files/Internet%20Archive/chadmaster/jagcd-chd-zstd/jagcd-chd-zstd/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: chd
+  urls:
+  - https://archive.org/download/jagcd-chd-zstd/jagcd-chd-zstd/
+  filter: (.*)\.chd
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+jcd:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Atari%20-%20Jaguar%20CD%20Interactive%20Multimedia%20System/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/atari_jaguar-cd
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+tg16:
+- source: myrient
+  format: pce
+  urls:
+  - https://myrient.erista.me/files/No-Intro/NEC%20-%20PC%20Engine%20-%20TurboGrafx-16/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: pce
+  urls:
+  - https://archive.org/download/nointro.tg-16
+  filter: (.*)\.7z
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+tgcd:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/NEC%20-%20PC%20Engine%20CD%20&%20TurboGrafx%20CD/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/nec_pc-engine-cd_turbografx-cd
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+pcfx:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/NEC%20-%20PC-FX%20&%20PC-FXGA/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/nec_pc-fxpc_fxga
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+pc98:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/NEC%20-%20PC-98%20series/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/nec_pc-98_series
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+intv:
+- source: myrient
+  format: int
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Mattel%20-%20Intellivision/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+cv:
+- source: myrient
+  format: col
+  urls:
+  - https://myrient.erista.me/files/No-Intro/Coleco%20-%20ColecoVision/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+3do:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Panasonic%20-%203DO%20Interactive%20Multiplayer/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/panasonic_3do_interactive_multiplayer
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+cdi:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Philips%20-%20CD-i/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/philips_cd-i
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+fmt:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Fujitsu%20-%20FM-Towns/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/fujitsu_fm_towns_series
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    no_intro: {}
+ngcd:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/SNK%20-%20Neo%20Geo%20CD/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/snk_neo_geo
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    libretro: {}
+    no_intro: {}
+pip:
+- source: myrient
+  format: bin/cue
+  urls:
+  - https://myrient.erista.me/files/Redump/Bandai%20-%20Pippin/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    no_intro: {}
+- source: internet_archive
+  format: bin/cue
+  urls:
+  - https://archive.org/download/bandai_pippin
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    no_intro: {}

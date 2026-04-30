@@ -31,3 +31,4 @@ config.json
 
 # Credentials (never commit)
 *_creds.json
+secrets/

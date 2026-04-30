@@ -9,6 +9,13 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/models.dart';
 
+/// The schema version the app currently understands. The build pipeline
+/// stamps version.json#schema_version with the same constant
+/// (db/database/db_manager.py:SCHEMA_VERSION). When they diverge, the
+/// local catalog DB is wiped and re-downloaded — we don't run live
+/// migrations.
+const int kAppExpectedSchemaVersion = 2;
+
 class DatabaseVersion {
   final String version;
   final DateTime generatedAt;
@@ -18,6 +25,17 @@ class DatabaseVersion {
   final int links;
   final int platforms;
 
+  /// Schema version of this DB build. Pre-v2 builds omit this field; we
+  /// treat absent as schema 1.
+  final int schemaVersion;
+
+  /// Minimum app version required to consume this DB. Pre-v2 builds omit
+  /// this field; absent means no minimum.
+  final String? minAppVersion;
+
+  /// Number of sources represented in the build. Optional.
+  final int? sources;
+
   const DatabaseVersion({
     required this.version,
     required this.generatedAt,
@@ -26,6 +44,9 @@ class DatabaseVersion {
     required this.entries,
     required this.links,
     required this.platforms,
+    this.schemaVersion = 1,
+    this.minAppVersion,
+    this.sources,
   });
 
   factory DatabaseVersion.fromJson(Map<String, dynamic> json) {
@@ -37,8 +58,32 @@ class DatabaseVersion {
       entries: json['entries'] as int,
       links: json['links'] as int,
       platforms: json['platforms'] as int,
+      schemaVersion: json['schema_version'] as int? ?? 1,
+      minAppVersion: json['min_app_version'] as String?,
+      sources: json['sources'] as int?,
     );
   }
+}
+
+/// Result of probing the remote DB against this app build.
+class DatabaseUpdateCheck {
+  /// New DB metadata if an update is available.
+  final DatabaseVersion? available;
+
+  /// True when the local DB schema is older than what this app expects;
+  /// the catalog DB must be wiped and re-downloaded before opening.
+  final bool localIsStale;
+
+  /// True when the remote DB requires a newer app build than the user
+  /// has installed. Caller should surface a "please update the app"
+  /// prompt and not download the new DB.
+  final bool appTooOld;
+
+  const DatabaseUpdateCheck({
+    this.available,
+    this.localIsStale = false,
+    this.appTooOld = false,
+  });
 }
 
 /// Service for managing the ROM catalog database
@@ -78,6 +123,15 @@ class RomDatabaseService {
     final dbPath = await _dbPath;
 
     if (!File(dbPath).existsSync()) {
+      return false;
+    }
+
+    // Cleanup-on-upgrade: if the local DB was built against an older
+    // schema than this app expects, wipe it and force a re-download.
+    // Catalog data is fully regenerable; user state (downloads,
+    // favorites) lives in a separate sqflite file and isn't touched.
+    if (await isLocalDatabaseStale()) {
+      await deleteDatabase();
       return false;
     }
 
@@ -133,20 +187,78 @@ class RomDatabaseService {
   }
 
   Future<DatabaseVersion?> checkForUpdate() async {
+    final result = await checkRemoteForUpdate(currentAppVersion: null);
+    return result.available;
+  }
+
+  /// Probe the remote version manifest and decide whether the local DB is
+  /// usable. Pass [currentAppVersion] (e.g. from `package_info_plus`) so
+  /// the check can flag DBs that require a newer app build.
+  Future<DatabaseUpdateCheck> checkRemoteForUpdate({
+    required String? currentAppVersion,
+  }) async {
     try {
       final response = await _dio.get('$_baseUrl/$_versionFileName');
-      final remoteVersion = DatabaseVersion.fromJson(response.data);
-      final localVersion = await getLocalVersion();
+      final remote = DatabaseVersion.fromJson(
+        response.data is String
+            ? json.decode(response.data as String) as Map<String, dynamic>
+            : response.data as Map<String, dynamic>,
+      );
+      final local = await getLocalVersion();
 
-      if (localVersion == null ||
-          remoteVersion.version != localVersion.version) {
-        return remoteVersion;
-      }
+      final appTooOld = currentAppVersion != null &&
+          remote.minAppVersion != null &&
+          _isVersionLessThan(currentAppVersion, remote.minAppVersion!);
 
-      return null; // No update available
-    } catch (e) {
-      return null;
+      final localIsStale = local != null &&
+          local.schemaVersion < kAppExpectedSchemaVersion;
+
+      final hasUpdate = local == null || remote.version != local.version;
+
+      return DatabaseUpdateCheck(
+        available: hasUpdate ? remote : null,
+        localIsStale: localIsStale,
+        appTooOld: appTooOld,
+      );
+    } catch (_) {
+      return const DatabaseUpdateCheck();
     }
+  }
+
+  /// Whether a previously-downloaded local DB has a schema older than this
+  /// app expects. Caller should `deleteDatabase()` and re-download before
+  /// opening — we never run live migrations.
+  Future<bool> isLocalDatabaseStale() async {
+    final local = await getLocalVersion();
+    if (local == null) return false;
+    return local.schemaVersion < kAppExpectedSchemaVersion;
+  }
+
+  /// Lexicographic semver-ish compare for dotted numeric strings (e.g.
+  /// "1.2.0" < "1.10.0"). Falls back to a string compare if either side
+  /// isn't purely numeric. Used to gate against `min_app_version`.
+  static bool _isVersionLessThan(String a, String b) {
+    List<int>? parts(String v) {
+      final out = <int>[];
+      for (final s in v.split('.')) {
+        final n = int.tryParse(s);
+        if (n == null) return null;
+        out.add(n);
+      }
+      return out;
+    }
+
+    final pa = parts(a);
+    final pb = parts(b);
+    if (pa == null || pb == null) return a.compareTo(b) < 0;
+
+    final n = pa.length > pb.length ? pa.length : pb.length;
+    for (var i = 0; i < n; i++) {
+      final ai = i < pa.length ? pa[i] : 0;
+      final bi = i < pb.length ? pb[i] : 0;
+      if (ai != bi) return ai < bi;
+    }
+    return false;
   }
 
   Future<void> downloadDatabase({
@@ -398,6 +510,11 @@ class RomDatabaseService {
         size: l['size'] as int? ?? 0,
         sizeStr: l['size_str'] as String? ?? '',
         sourceUrl: l['source_url'] as String? ?? '',
+        sourceId: l['source_id'] as String?,
+        requiresAuth: (l['requires_auth'] as int? ?? 0) != 0,
+        torrentInfohash: l['torrent_infohash'] as String?,
+        torrentFileIndex: l['torrent_file_index'] as int?,
+        torrentFilePath: l['torrent_file_path'] as String?,
       );
     }).toList();
 

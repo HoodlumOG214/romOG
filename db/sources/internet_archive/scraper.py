@@ -4,7 +4,7 @@ Internet Archive source plugin.
 Scrapes both publicly-linked files and login-required ("restricted")
 files from archive.org item pages. Restricted entries are tagged in the
 link `type` string; the app gates downloads on auth state. Login on the
-build side uses CI credentials stored at scrapers/internet_archive_creds.json.
+build side uses CI credentials stored at secrets/internet_archive_creds.json.
 """
 import re
 import urllib.parse
@@ -26,7 +26,7 @@ LOGIN_URL = 'https://archive.org/account/login'
 session = None
 
 
-def get_login_session(creds_path='scrapers/internet_archive_creds.json'):
+def get_login_session(creds_path='secrets/internet_archive_creds.json'):
     """Create and return a session logged into the Internet Archive."""
     try:
         with open(creds_path, 'r') as f:
@@ -194,6 +194,11 @@ def scrape(source, platform, use_cached=False):
             if parsed_entries:
                 for entry in parsed_entries:
                     for link in entry['links']:
+                        # Schema-level signal — used by the app's link
+                        # resolver and download adapter to gate on auth.
+                        link['requires_auth'] = 1
+                        # Legacy substring kept until Phase 5 removes the
+                        # last UI consumer of the type string.
                         link['type'] += " (Requires Internet Archive Log in)"
                 entries.extend(parsed_entries)
             else:

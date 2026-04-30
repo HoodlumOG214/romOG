@@ -49,7 +49,8 @@ jobs:
           IA_PASSWORD: ${{ secrets.IA_PASSWORD }}
         run: |
           if [ -n "$IA_USERNAME" ]; then
-            python -c "import json,os; json.dump({'username':os.environ['IA_USERNAME'],'password':os.environ['IA_PASSWORD']}, open('scrapers/internet_archive_creds.json','w'))"
+            mkdir -p secrets
+            python -c "import json,os; json.dump({'username':os.environ['IA_USERNAME'],'password':os.environ['IA_PASSWORD']}, open('secrets/internet_archive_creds.json','w'))"
           fi
 
       - name: Run database generation workflow
@@ -66,11 +67,15 @@ jobs:
           ENTRY_COUNT=$(sqlite3 romdb.db "SELECT COUNT(*) FROM entries")
           LINK_COUNT=$(sqlite3 romdb.db "SELECT COUNT(*) FROM links")
           PLATFORM_COUNT=$(sqlite3 romdb.db "SELECT COUNT(DISTINCT platform) FROM entries")
+          SOURCE_COUNT=$(sqlite3 romdb.db "SELECT COUNT(*) FROM sources")
+          SCHEMA_VERSION=$(python -c "from database import db_manager; print(db_manager.SCHEMA_VERSION)")
           echo "db_size=$DB_SIZE" >> $GITHUB_OUTPUT
           echo "gz_size=$GZ_SIZE" >> $GITHUB_OUTPUT
           echo "entry_count=$ENTRY_COUNT" >> $GITHUB_OUTPUT
           echo "link_count=$LINK_COUNT" >> $GITHUB_OUTPUT
           echo "platform_count=$PLATFORM_COUNT" >> $GITHUB_OUTPUT
+          echo "source_count=$SOURCE_COUNT" >> $GITHUB_OUTPUT
+          echo "schema_version=$SCHEMA_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create version.json
         run: |
@@ -78,11 +83,14 @@ jobs:
           {
             "version": "$(date +%Y%m%d)",
             "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "schema_version": ${{ steps.stats.outputs.schema_version }},
+            "min_app_version": "1.2.0",
             "size": ${{ steps.stats.outputs.gz_size }},
             "uncompressed_size": ${{ steps.stats.outputs.db_size }},
             "entries": ${{ steps.stats.outputs.entry_count }},
             "links": ${{ steps.stats.outputs.link_count }},
-            "platforms": ${{ steps.stats.outputs.platform_count }}
+            "platforms": ${{ steps.stats.outputs.platform_count }},
+            "sources": ${{ steps.stats.outputs.source_count }}
           }
           EOF
 

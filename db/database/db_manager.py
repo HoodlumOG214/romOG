@@ -1,14 +1,26 @@
 """
-This module provides functionality for managing a SQLite database used to store information about ROMs, platforms, regions, and associated metadata. 
-It includes methods for initializing the database, inserting or updating entries, and closing the database connection.
+Catalog DB manager.
+
+Owns schema and write path. Schema version bumps require an app-side
+cleanup-on-upgrade — the app wipes its local catalog DB and re-pulls
+when SCHEMA_VERSION changes, so we never run live migrations.
 """
-import sqlite3
+import json
 import os
+import sqlite3
+import time
+
 from utils.parse_utils import create_slug, create_search_key
 
 DB_NAME = 'romdb.db'
 DB_TEMP_NAME = 'romdb_temp.db'
 DB_OLD_NAME = 'romdb_old.db'
+
+# Bump this whenever the schema below changes. The Flutter app uses
+# version.json#schema_version to decide whether its local DB is stale and
+# must be re-downloaded. Always synchronise with the app's expected
+# schema constant.
+SCHEMA_VERSION = 2
 
 con = None
 cur = None
@@ -74,7 +86,7 @@ REGIONS = {
 
 
 def init_database():
-    """Initialize the database by creating tables, indexes, and populating initial data."""
+    """Initialize the database: create tables, indexes, seed static data."""
     global con, cur
 
     if os.path.exists(DB_TEMP_NAME):
@@ -129,18 +141,80 @@ def init_database():
         )
     ''')
 
+    # Schema v2: sources are first-class. Each link points back to a
+    # source via source_id. requires_auth is a structured flag instead
+    # of a substring sniff on `type`.
+    cur.execute('''
+        CREATE TABLE sources (
+            id            TEXT PRIMARY KEY,
+            name          TEXT NOT NULL,
+            homepage      TEXT,
+            kind          TEXT NOT NULL,
+            auth_required INTEGER NOT NULL DEFAULT 0,
+            priority      INTEGER NOT NULL DEFAULT 0,
+            manifest_json TEXT NOT NULL
+        )
+    ''')
+
+    cur.execute('''
+        CREATE TABLE source_health (
+            source_id     TEXT PRIMARY KEY REFERENCES sources(id),
+            status        TEXT NOT NULL,
+            last_checked  INTEGER NOT NULL,
+            reason        TEXT,
+            entry_count   INTEGER,
+            link_count    INTEGER
+        )
+    ''')
+
+    # Reserved for future user-supplied sources. Build pipeline never
+    # writes here; the app owns it. Schema lives here so users don't
+    # face a second migration when the feature ships.
+    cur.execute('''
+        CREATE TABLE user_sources (
+            id           TEXT PRIMARY KEY,
+            name         TEXT NOT NULL,
+            kind         TEXT NOT NULL,
+            config_json  TEXT NOT NULL,
+            created_at   INTEGER NOT NULL
+        )
+    ''')
+
+    # Torrent metadata. Populated when a source produces magnet/.torrent
+    # links (Phase 3+: MiNERVA). Each link row points at one infohash
+    # and one file index inside that torrent.
+    cur.execute('''
+        CREATE TABLE torrents (
+            infohash       TEXT PRIMARY KEY,
+            source_id      TEXT NOT NULL REFERENCES sources(id),
+            name           TEXT,
+            magnet         TEXT,
+            torrent_blob   BLOB,
+            total_size     INTEGER,
+            piece_length   INTEGER,
+            file_count     INTEGER,
+            trackers_json  TEXT,
+            added_at       INTEGER NOT NULL
+        )
+    ''')
+
     cur.execute('''
         CREATE TABLE links (
-            entry TEXT,
-            name TEXT,
-            type TEXT,
-            format TEXT,
-            url TEXT,
-            filename TEXT,
-            host TEXT,
-            size INTEGER,
-            size_str TEXT,
-            source_url TEXT,
+            entry              TEXT,
+            name               TEXT,
+            type               TEXT,
+            format             TEXT,
+            url                TEXT,
+            filename           TEXT,
+            host               TEXT,
+            size               INTEGER,
+            size_str           TEXT,
+            source_url         TEXT,
+            source_id          TEXT REFERENCES sources(id),
+            requires_auth      INTEGER NOT NULL DEFAULT 0,
+            torrent_infohash   TEXT REFERENCES torrents(infohash),
+            torrent_file_index INTEGER,
+            torrent_file_path  TEXT,
             FOREIGN KEY (entry) REFERENCES entries (slug)
         )
     ''')
@@ -151,6 +225,8 @@ def init_database():
     cur.execute(
         'CREATE INDEX idx_regions_entries_region ON regions_entries (region);')
     cur.execute('CREATE INDEX idx_links_entry ON links (entry);')
+    cur.execute('CREATE INDEX idx_links_source ON links (source_id);')
+    cur.execute('CREATE INDEX idx_links_torrent ON links (torrent_infohash);')
 
     for id, info in PLATFORMS.items():
         cur.execute('INSERT INTO platforms (id, brand, name) VALUES (?, ?, ?)',
@@ -160,17 +236,57 @@ def init_database():
         cur.execute('INSERT INTO regions (id, name) VALUES (?, ?)', (id, name))
 
 
+def register_source(manifest) -> None:
+    """Insert a source row from a SourceManifest.
+
+    Called once per source at the start of the build, after init_database().
+    The manifest's raw dict is round-tripped into manifest_json so the app
+    can read forward-compatible fields without code changes.
+    """
+    cur.execute(
+        'INSERT INTO sources '
+        '(id, name, homepage, kind, auth_required, priority, manifest_json) '
+        'VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (
+            manifest.id,
+            manifest.name,
+            manifest.homepage,
+            manifest.kind,
+            int(bool(manifest.auth_required)),
+            int(manifest.priority),
+            json.dumps(manifest.raw, sort_keys=True),
+        ),
+    )
+
+
+def record_source_health(
+    source_id: str,
+    status: str,
+    *,
+    reason: str | None = None,
+    entry_count: int = 0,
+    link_count: int = 0,
+    last_checked: int | None = None,
+) -> None:
+    """Upsert a source_health row."""
+    ts = last_checked if last_checked is not None else int(time.time())
+    cur.execute(
+        'INSERT OR REPLACE INTO source_health '
+        '(source_id, status, last_checked, reason, entry_count, link_count) '
+        'VALUES (?, ?, ?, ?, ?, ?)',
+        (source_id, status, ts, reason, entry_count, link_count),
+    )
+
+
 def insert_entry(entry: dict):
     """Insert a new entry into the database or update it if it exists."""
     entry['slug'] = create_slug(entry)
     entry['search_key'] = create_search_key(entry['title'])
 
-    # Check if an entry with the same slug exists
     cur.execute("SELECT slug FROM entries WHERE slug = ?", (entry['slug'],))
     existing_entry = cur.fetchone()
 
     if existing_entry:
-        # Update fields where they are NULL
         cur.execute('''
             UPDATE entries
             SET rom_id = COALESCE(rom_id, ?),
@@ -188,25 +304,9 @@ def insert_entry(entry: dict):
             entry['slug']
         ))
 
-        # Add new links
         for link in entry.get('links', []):
-            cur.execute('''
-                INSERT OR IGNORE INTO links (entry, name, type, format, url, filename, host, size, size_str, source_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                entry.get('slug'),
-                link.get('name'),
-                link.get('type'),
-                link.get('format'),
-                link.get('url'),
-                link.get('filename'),
-                link.get('host'),
-                link.get('size'),
-                link.get('size_str'),
-                link.get('source_url')
-            ))
+            _insert_link(entry['slug'], link, ignore_duplicates=True)
     else:
-        # Insert the new entry into the entries table
         cur.execute('''
             INSERT INTO entries (slug, rom_id, search_key, title, platform, boxart_url)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -219,36 +319,49 @@ def insert_entry(entry: dict):
             entry.get('boxart_url')
         ))
 
-        # Insert into the FTS4 table
         cur.execute('''
             INSERT INTO entries_fts (docid, search_key)
             VALUES (last_insert_rowid(), ?)
         ''', (entry['search_key'],))
 
-        # Insert regions into the regions_entries table
         for region in entry.get('regions', []):
             cur.execute('''
                 INSERT OR IGNORE INTO regions_entries (entry, region)
                 VALUES (?, ?)
             ''', (entry.get('slug'), region))
 
-        # Insert links into the links table
         for link in entry.get('links', []):
-            cur.execute('''
-                INSERT INTO links (entry, name, type, format, url, filename, host, size, size_str, source_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                entry.get('slug'),
-                link.get('name'),
-                link.get('type'),
-                link.get('format'),
-                link.get('url'),
-                link.get('filename'),
-                link.get('host'),
-                link.get('size'),
-                link.get('size_str'),
-                link.get('source_url')
-            ))
+            _insert_link(entry['slug'], link, ignore_duplicates=False)
+
+
+def _insert_link(entry_slug: str, link: dict, *, ignore_duplicates: bool) -> None:
+    """Insert one link row, including v2 source/torrent fields."""
+    sql = (
+        'INSERT OR IGNORE INTO links (' if ignore_duplicates
+        else 'INSERT INTO links ('
+    ) + (
+        'entry, name, type, format, url, filename, host, size, size_str, '
+        'source_url, source_id, requires_auth, '
+        'torrent_infohash, torrent_file_index, torrent_file_path'
+        ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    )
+    cur.execute(sql, (
+        entry_slug,
+        link.get('name'),
+        link.get('type'),
+        link.get('format'),
+        link.get('url'),
+        link.get('filename'),
+        link.get('host'),
+        link.get('size'),
+        link.get('size_str'),
+        link.get('source_url'),
+        link.get('source_id'),
+        int(bool(link.get('requires_auth'))),
+        link.get('torrent_infohash'),
+        link.get('torrent_file_index'),
+        link.get('torrent_file_path'),
+    ))
 
 
 def close_database():
