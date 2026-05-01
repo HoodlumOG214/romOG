@@ -13,24 +13,23 @@ Concept inspired by [pkgi-psp](https://github.com/bucanero/pkgi-psp), [Kekatsu-D
 ## Features
 
 - **Browse & Search** - Search through thousands of ROMs across multiple platforms
-- **Platform Filtering** - Filter by Nintendo, Sony, Sega, and many more
-- **Region Filtering** - Find ROMs by region (US, EU, JP, etc.)
+- **Platform & Region Filtering** - Filter by brand, platform, and region (US, EU, JP, ...)
 - **Box Art Display** - Visual browsing with cached cover art thumbnails
 - **Download Queue** - Queue multiple downloads with concurrent download support
-- **Background Downloads** - Downloads continue even when the app is in the background
-- **Pause & Resume** - Pause downloads and resume them anytime, even after app restart
+- **HTTP + Torrent transports** - Direct HTTP downloads and BitTorrent (selective per-file) in the same queue
+- **Background Downloads** - Downloads continue when the app is in the background
+- **Pause & Resume** - Resume downloads after app restart, including torrents
 - **ZIP Extraction** - Automatic extraction of downloaded archives
 - **Library Management** - Track all your downloaded ROMs in one place
-- **Platform Organization** - Downloads automatically organized into platform folders
 - **Custom Download Paths** - Set default or per-platform download locations
-- **Internet Archive Support** - Login support for protected Internet Archive downloads
+- **Internet Archive Support** - Persistent login for protected Internet Archive items
+- **Source Status** - See per-catalog health (online / down / unknown) in Settings
 
 ## Quick Setup
 
 1. Download the latest APK from the [Releases](https://github.com/caprado/romgi/releases) page.
 
 2. Install the APK on your Android device.
-
    - You may need to enable "Install from unknown sources" in your device settings.
 
 3. Launch romgi and grant storage permissions when prompted.
@@ -73,13 +72,21 @@ You can customize this in **Settings > Download Locations**:
 
 ## Internet Archive Login
 
-Some ROMs hosted on Internet Archive require authentication. To access these:
+Some ROMs hosted on Internet Archive require authentication. To access them:
 
-1. Go to **Settings > Accounts > Internet Archive**
-2. Enter your Internet Archive credentials
-3. Protected downloads will now work automatically
+1. Go to **Settings > Accounts > Internet Archive > Log in**.
+2. Sign in to archive.org in the embedded browser.
+3. romgi captures the session and exchanges it for a long-lived API key — protected downloads work automatically from then on.
 
-Links requiring login are marked with a purple "Login Required" badge.
+The session is stored encrypted on the device and persists across app restarts. romgi re-validates it in the background; if the key is ever revoked, you'll be prompted to log in again. Links requiring login are marked with a "Login Required" badge.
+
+## Torrent Sources
+
+Some catalogs (notably MiNERVA) distribute ROMs as BitTorrent torrents — often as multi-ROM packs containing thousands of files. romgi handles these natively:
+
+- The download queue treats torrent links the same as HTTP links — pick a ROM, tap **Download**.
+- Only the file you ask for is downloaded from the torrent (selective download via libtorrent file priorities). You don't grab the whole pack.
+- **Settings > Downloads > Seed torrents** controls whether romgi continues sharing back to peers while a download is active. On by default; turn it off if you have a metered connection.
 
 ## Supported Platforms
 
@@ -98,24 +105,34 @@ romgi supports a wide range of retro gaming platforms, including:
 - Android SDK with API level 24+ (Android 7.0+)
 - Git
 
-### Build Instructions
+### Build the app
 
 ```bash
-# Clone the repository
 git clone https://github.com/caprado/romgi.git
 cd romgi
-
-# Get dependencies
 flutter pub get
 
-# Build debug APK
-flutter build apk --debug
-
-# Build release APK
-flutter build apk --release
+flutter build apk --debug      # debug APK
+flutter build apk --release    # release APK (arm64 only)
 ```
 
 The built APK will be located at `build/app/outputs/flutter-apk/app-release.apk`.
+
+Release builds are filtered to **arm64-v8a** to keep the APK size sane after bundling the BitTorrent runtime. Every modern Android phone and retro handheld is arm64. To produce a 4-ABI build, edit `abiFilters` in `android/app/build.gradle.kts`.
+
+### Rebuild the catalog database (optional)
+
+The app pulls a pre-built SQLite catalog from this repo. CI rebuilds it weekly. If you want to run the build locally:
+
+```bash
+cd db
+pip install -r requirements.txt
+python workflow.py                  # full rebuild
+python workflow.py --use-cached     # reuse cached HTTP responses
+python workflow.py --skip-minerva   # skip the ~1.7 GB MiNERVA mirror download
+```
+
+Output is `db/romdb.db`. Adding a new source = drop a folder under `db/sources/<id>/` with `source.yml` + `scraper.py` and add the platform routes in `db/platforms.yml`.
 
 ## Technical Details
 
@@ -126,15 +143,19 @@ The built APK will be located at `build/app/outputs/flutter-apk/app-release.apk`
 
 ### Key Dependencies
 
-| Package                       | Purpose                            |
-| ----------------------------- | ---------------------------------- |
-| `dio`                         | HTTP client with download progress |
-| `sqflite`                     | Local SQLite database              |
-| `flutter_riverpod`            | State management                   |
-| `cached_network_image`        | Box art caching                    |
-| `archive`                     | ZIP extraction                     |
-| `flutter_local_notifications` | Download notifications             |
-| `flutter_foreground_task`     | Background downloads               |
+| Package                       | Purpose                                 |
+| ----------------------------- | --------------------------------------- |
+| `dio`                         | HTTP client with download progress      |
+| `sqflite`                     | Local SQLite (downloads, library)       |
+| `flutter_riverpod`            | State management                        |
+| `cached_network_image`        | Box art caching                         |
+| `archive`                     | ZIP extraction                          |
+| `flutter_local_notifications` | Download notifications                  |
+| `flutter_foreground_task`     | Background HTTP + torrent downloads     |
+| `flutter_secure_storage`      | Encrypted IA session storage            |
+| `webview_flutter`             | IA login flow                           |
+| `pigeon`                      | Type-safe Dart ↔ Kotlin torrent bridge  |
+| `jlibtorrent` (Android)       | BitTorrent runtime with file priorities |
 
 ## Disclaimer
 
@@ -142,7 +163,7 @@ romgi is a tool for downloading content; it does not host any ROMs or copyrighte
 
 ## Credits
 
-- **Data Sources**: Myrient, Internet Archive, NoPayStation, MarioCube
+- **Data Sources**: MiNERVA Archive, Internet Archive, NoPayStation, MarioCube
 - **Inspiration**: [pkgi-psp](https://github.com/bucanero/pkgi-psp), [Kekatsu-DS](https://github.com/cavv-dev/Kekatsu-DS)
 - **Framework**: [Flutter](https://flutter.dev/)
 
