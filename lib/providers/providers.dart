@@ -9,4 +9,6 @@ export 'recently_viewed_provider.dart';
 export 'regions_provider.dart';
 export 'search_provider.dart';
 export 'settings_provider.dart';
+export 'sources_provider.dart';
+export 'torrent_provider.dart';
 export 'update_provider.dart';

@@ -2,3 +2,4 @@ requests
 cloudscraper
 unidecode
 playwright
+pyyaml

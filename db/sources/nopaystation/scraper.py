@@ -1,17 +1,22 @@
 """
-This module provides functionality to scrape and process data from the NoPayStation database.
-It includes methods for handling PS3 RAP files, PSV ZRIF strings, and parsing links and entries
-from the source data. The module also supports caching and fetching responses from URLs.
+NoPayStation source plugin.
+
+Scrapes the NoPayStation TSV database for PS3/PSV titles. Generates RAP
+(PS3) and ZRIF (PSV) key files into static/content/ alongside the
+catalog DB on the GitHub raw mirror.
 """
 import os
 import requests
 import csv
 import io
 import xml.etree.ElementTree as ET
-import sys
+
 from utils import cache_manager
 from utils.scrape_utils import fetch_url
 from utils.parse_utils import size_bytes_to_str, join_urls
+
+from core.contract import BuildContext, PlatformConfig, Source, SourceManifest
+
 
 HOST_NAME = 'NoPayStation'
 
@@ -211,3 +216,21 @@ def scrape(source, platform, use_cached=False):
         entries.extend(parsed_entries)
 
     return entries
+
+
+class NoPayStationSource:
+    """Adapter from the plugin contract to the legacy scrape()."""
+
+    def __init__(self, manifest: SourceManifest):
+        self.manifest = manifest
+
+    def scrape(
+        self,
+        platform: str,
+        config: PlatformConfig,
+        ctx: BuildContext,
+    ) -> list[dict]:
+        return scrape(config.to_legacy_dict(), platform, ctx.use_cached)
+
+
+SOURCE = NoPayStationSource

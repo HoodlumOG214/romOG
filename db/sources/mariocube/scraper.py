@@ -1,16 +1,19 @@
 """
-This module provides functionality to scrape and parse entries from MarioCube indexes.
-It detects the plain-text directory listings returned to curl-style clients, extracts file
-metadata, and formats the data into structured entries ready for downstream processing.
+MarioCube source plugin.
+
+archive.mariocube.com serves a plain-text directory listing to curl-style
+User-Agents. Strip ANSI colour, split into (size, filename), emit entries.
 """
 import html
 import re
-import sys
 import urllib.parse
 
 from utils import cache_manager
 from utils.scrape_utils import fetch_url, create_scraper_session
 from utils.parse_utils import size_str_to_bytes, join_urls
+
+from core.contract import BuildContext, PlatformConfig, Source, SourceManifest
+
 
 HOST_NAME = 'MarioCube'
 
@@ -115,3 +118,21 @@ def scrape(source, platform, use_cached=False):
         entries.extend(parsed_entries)
 
     return entries
+
+
+class MarioCubeSource:
+    """Adapter from the plugin contract to the legacy scrape()."""
+
+    def __init__(self, manifest: SourceManifest):
+        self.manifest = manifest
+
+    def scrape(
+        self,
+        platform: str,
+        config: PlatformConfig,
+        ctx: BuildContext,
+    ) -> list[dict]:
+        return scrape(config.to_legacy_dict(), platform, ctx.use_cached)
+
+
+SOURCE = MarioCubeSource

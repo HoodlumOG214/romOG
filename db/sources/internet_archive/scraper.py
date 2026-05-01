@@ -1,15 +1,24 @@
 """
-This module provides functionality to scrape data from Internet Archive indexes.
-It extracts entries from HTML content and creates structured data entries.
+Internet Archive source plugin.
+
+Scrapes publicly-linked and login-required ("restricted") files from
+archive.org item pages. CI uses credentials at
+secrets/internet_archive_creds.json to log in for restricted listings;
+the app gates restricted downloads on the user's own session.
 """
 import re
 import urllib.parse
 import html
 import json
+
 import cloudscraper
+
 from utils import cache_manager
 from utils.scrape_utils import fetch_url
 from utils.parse_utils import size_bytes_to_str, size_str_to_bytes, join_urls
+
+from core.contract import BuildContext, PlatformConfig, Source, SourceManifest
+
 
 HOST_NAME = 'Internet Archive'
 LOGIN_URL = 'https://archive.org/account/login'
@@ -17,7 +26,7 @@ LOGIN_URL = 'https://archive.org/account/login'
 session = None
 
 
-def get_login_session(creds_path='scrapers/internet_archive_creds.json'):
+def get_login_session(creds_path='secrets/internet_archive_creds.json'):
     """Create and return a session logged into the Internet Archive."""
     try:
         with open(creds_path, 'r') as f:
@@ -185,6 +194,9 @@ def scrape(source, platform, use_cached=False):
             if parsed_entries:
                 for entry in parsed_entries:
                     for link in entry['links']:
+                        # Structured flag the app's resolver/adapter read.
+                        link['requires_auth'] = 1
+                        # Human-readable suffix for UI label fallback.
                         link['type'] += " (Requires Internet Archive Log in)"
                 entries.extend(parsed_entries)
             else:
@@ -193,3 +205,21 @@ def scrape(source, platform, use_cached=False):
                 extract_entries(response, source, platform, url, debug=True)
 
     return entries
+
+
+class InternetArchiveSource:
+    """Adapter from the plugin contract to the legacy scrape()."""
+
+    def __init__(self, manifest: SourceManifest):
+        self.manifest = manifest
+
+    def scrape(
+        self,
+        platform: str,
+        config: PlatformConfig,
+        ctx: BuildContext,
+    ) -> list[dict]:
+        return scrape(config.to_legacy_dict(), platform, ctx.use_cached)
+
+
+SOURCE = InternetArchiveSource

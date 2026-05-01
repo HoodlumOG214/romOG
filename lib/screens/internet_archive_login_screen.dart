@@ -55,17 +55,19 @@ class _InternetArchiveLoginScreenState
       ..loadRequest(Uri.parse(_loginUrl));
   }
 
+  bool _exchangeInProgress = false;
+
   Future<void> _extractAndSaveCookies() async {
+    if (_exchangeInProgress) return;
+    _exchangeInProgress = true;
     try {
-      // Get cookies using JavaScript - document.cookie returns all cookies
       final cookieResult = await _controller.runJavaScriptReturningResult(
         'document.cookie',
       );
 
-      // Parse the cookie string (format: "name1=value1; name2=value2")
+      // "name1=value1; name2=value2"
       final cookieMap = <String, String>{};
       final rawString = cookieResult.toString();
-      // Remove quotes if present (JS returns quoted string)
       final cleanString = rawString.startsWith('"') && rawString.endsWith('"')
           ? rawString.substring(1, rawString.length - 1)
           : rawString;
@@ -73,33 +75,48 @@ class _InternetArchiveLoginScreenState
       for (final pair in cleanString.split('; ')) {
         final idx = pair.indexOf('=');
         if (idx > 0) {
-          final name = pair.substring(0, idx);
-          final value = pair.substring(idx + 1);
-          cookieMap[name] = value;
+          cookieMap[pair.substring(0, idx)] = pair.substring(idx + 1);
         }
       }
 
-      // Check if we have the logged-in cookies
-      if (cookieMap.containsKey('logged-in-user') &&
-          cookieMap['logged-in-user']!.isNotEmpty) {
-        final authService = ref.read(internetArchiveAuthProvider);
-        await authService.saveCookies(cookieMap);
+      // Need the IA session cookies to bootstrap the S3-key fetch.
+      final user = cookieMap['logged-in-user'];
+      if (user == null || user.isEmpty) return;
 
-        // Refresh the auth state
-        ref.invalidate(iaLoggedInProvider);
+      final auth = ref.read(internetArchiveAuthProvider);
+      final session = await auth.completeLoginFromCookies(cookieMap);
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Logged in as ${cookieMap['logged-in-user']}'),
-              backgroundColor: Colors.green,
+      if (!mounted) return;
+
+      if (session == null) {
+        // Login succeeded but s3.php didn't yield keys; let the user retry.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not retrieve Internet Archive credentials. '
+              'Please try again.',
             ),
-          );
-          Navigator.of(context).pop(true); // Return success
-        }
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        return;
       }
+
+      ref.invalidate(iaLoggedInProvider);
+      ref.invalidate(iaUsernameProvider);
+      ref.invalidate(iaSessionStatusProvider);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logged in as ${session.username}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop(true);
     } catch (_) {
-      // Ignore cookie extraction errors
+      // Network/JS errors are recoverable — the user can retry.
+    } finally {
+      _exchangeInProgress = false;
     }
   }
 

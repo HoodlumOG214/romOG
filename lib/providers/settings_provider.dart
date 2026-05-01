@@ -11,6 +11,7 @@ class SettingsState {
   final List<String> defaultPlatforms;
   final List<String> defaultRegions;
   final int maxConcurrentDownloads;
+  final bool seedingEnabled;
   final bool isLoading;
 
   const SettingsState({
@@ -20,6 +21,7 @@ class SettingsState {
     this.defaultPlatforms = const [],
     this.defaultRegions = const [],
     this.maxConcurrentDownloads = 3,
+    this.seedingEnabled = true,
     this.isLoading = false,
   });
 
@@ -31,6 +33,7 @@ class SettingsState {
     List<String>? defaultPlatforms,
     List<String>? defaultRegions,
     int? maxConcurrentDownloads,
+    bool? seedingEnabled,
     bool? isLoading,
   }) {
     return SettingsState(
@@ -43,6 +46,7 @@ class SettingsState {
       defaultRegions: defaultRegions ?? this.defaultRegions,
       maxConcurrentDownloads:
           maxConcurrentDownloads ?? this.maxConcurrentDownloads,
+      seedingEnabled: seedingEnabled ?? this.seedingEnabled,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -70,6 +74,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   static const String _keyDefaultPlatforms = 'default_platforms';
   static const String _keyDefaultRegions = 'default_regions';
   static const String _keyMaxConcurrentDownloads = 'max_concurrent_downloads';
+  static const String _keySeedingEnabled = 'seeding_enabled';
 
   SettingsNotifier() : super(const SettingsState()) {
     _loadSettings();
@@ -95,6 +100,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final maxConcurrentDownloads =
         prefs.getInt(_keyMaxConcurrentDownloads) ?? 3;
 
+    final seedingEnabled = prefs.getBool(_keySeedingEnabled) ?? true;
+
     // Load platform-specific paths
     final platformPaths = <String, String>{};
     final keys = prefs.getKeys().where(
@@ -116,8 +123,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       defaultPlatforms: defaultPlatforms,
       defaultRegions: defaultRegions,
       maxConcurrentDownloads: maxConcurrentDownloads,
+      seedingEnabled: seedingEnabled,
       isLoading: false,
     );
+  }
+
+  Future<void> setSeedingEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keySeedingEnabled, enabled);
+    state = state.copyWith(seedingEnabled: enabled);
   }
 
   Future<void> setDefaultDownloadPath(String? path) async {
@@ -181,6 +195,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await prefs.remove(_keyDefaultPlatforms);
     await prefs.remove(_keyDefaultRegions);
     await prefs.remove(_keyMaxConcurrentDownloads);
+    await prefs.remove(_keySeedingEnabled);
 
     final keys = prefs.getKeys().where(
       (key) => key.startsWith(_keyPlatformPaths),

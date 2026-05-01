@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../services/download_service.dart';
-import '../services/internet_archive_auth_service.dart';
+import '../services/link_resolver.dart';
 import '../utils/utils.dart';
 import '../widgets/widgets.dart';
 import 'internet_archive_login_screen.dart';
@@ -102,20 +102,23 @@ class _EntryDetailContentState extends ConsumerState<_EntryDetailContent> {
     }
   }
 
-  List<DownloadLink> _sortLinksBySpeed(List<DownloadLink> links) {
-    final sorted = List<DownloadLink>.from(links);
-    sorted.sort((a, b) {
-      final aIsFast = a.host.toLowerCase().contains('internet archive');
-      final bIsFast = b.host.toLowerCase().contains('internet archive');
-
-      if (aIsFast && !bIsFast) return -1;
-      if (!aIsFast && bIsFast) return 1;
-
-      return 0;
-    });
-
-    return sorted;
+  List<DownloadLink> _rankLinks(List<DownloadLink> links, bool iaLoggedIn) {
+    final resolver = LinkResolver(sourcePriority: _knownSourcePriority);
+    final ranked = resolver.rank(
+      links,
+      LinkResolverPrefs(isIaLoggedIn: iaLoggedIn),
+    );
+    return ranked.map((r) => r.link).toList();
   }
+
+  // Mirror of source.yml priority values. Replaced when the SourcesService
+  // surfaces the live manifest table.
+  static const Map<String, int> _knownSourcePriority = {
+    'minerva': 200,
+    'nopaystation': 80,
+    'mariocube': 70,
+    'internet_archive': 50,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -321,8 +324,12 @@ class _EntryDetailContentState extends ConsumerState<_EntryDetailContent> {
                   ),
                 )
               else
-                ..._sortLinksBySpeed(
+                ..._rankLinks(
                   entry.links,
+                  ref.watch(iaLoggedInProvider).maybeWhen(
+                        data: (loggedIn) => loggedIn,
+                        orElse: () => false,
+                      ),
                 ).map((link) => _DownloadLinkCard(entry: entry, link: link)),
 
               const SizedBox(height: 32),
@@ -481,8 +488,7 @@ class _DownloadLinkCard extends ConsumerWidget {
 
   const _DownloadLinkCard({required this.entry, required this.link});
 
-  bool get _requiresLogin =>
-      InternetArchiveAuthService.requiresLogin(link.type);
+  bool get _requiresLogin => link.requiresAuth;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -616,7 +622,7 @@ class _DownloadLinkCard extends ConsumerWidget {
   }
 
   Future<void> _startDownload(BuildContext context, WidgetRef ref) async {
-    final requiresLogin = InternetArchiveAuthService.requiresLogin(link.type);
+    final requiresLogin = link.requiresAuth;
 
     if (requiresLogin) {
       final isLoggedIn = await ref.read(iaLoggedInProvider.future);

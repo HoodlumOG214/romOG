@@ -5,13 +5,17 @@ import 'package:archive/archive_io.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/models.dart';
+import '../torrent/torrent_api.g.dart';
 import 'database_service.dart';
-import 'internet_archive_auth_service.dart';
+import 'host_adapter.dart';
 import 'notification_service.dart';
 import 'storage_service.dart';
+import 'torrent_service.dart';
 
 enum AddDownloadResult { added, duplicate }
 
@@ -19,10 +23,14 @@ class DownloadService {
   final DatabaseService _db;
   final StorageService _storage;
   final NotificationService _notifications;
-  final InternetArchiveAuthService _iaAuth;
+  final HostAdapterRegistry _adapters;
+  final TorrentService _torrents;
   final Dio _dio;
   Dio? _nativeDio;
   final _uuid = const Uuid();
+  final Map<String, StreamSubscription<TorrentProgress>> _torrentProgressSubs = {};
+  final Map<String, StreamSubscription<({String infohash, String error})>>
+      _torrentErrorSubs = {};
 
   final _downloadController = StreamController<DownloadTask>.broadcast();
   Stream<DownloadTask> get downloadStream => _downloadController.stream;
@@ -52,13 +60,15 @@ class DownloadService {
     required DatabaseService db,
     required StorageService storage,
     required NotificationService notifications,
-    required InternetArchiveAuthService iaAuth,
+    required HostAdapterRegistry adapters,
+    required TorrentService torrents,
     Dio? dio,
-  }) : _db = db,
-       _storage = storage,
-       _notifications = notifications,
-       _iaAuth = iaAuth,
-       _dio = dio ?? Dio();
+  })  : _db = db,
+        _storage = storage,
+        _notifications = notifications,
+        _adapters = adapters,
+        _torrents = torrents,
+        _dio = dio ?? Dio();
 
   Future<void> initialize() async {
     await _notifications.initialize();
@@ -270,30 +280,27 @@ class DownloadService {
   }
 
   Future<void> _startDownload(DownloadTask task) async {
+    final adapter = _adapters.adapterFor(task.link);
+
+    if (adapter.isTorrent) {
+      await _startTorrentDownload(task, adapter);
+      return;
+    }
 
     final cancelToken = CancelToken();
     _activeCancelTokens[task.id] = cancelToken;
 
-    // Check if this download requires Internet Archive login
-    final requiresLogin = InternetArchiveAuthService.requiresLogin(
-      task.link.type,
-    );
-    if (requiresLogin) {
-      final isLoggedIn = await _iaAuth.isLoggedIn();
-      if (!isLoggedIn) {
-        // Fail immediately with auth required error
-        final failedTask = task.copyWith(
-          status: DownloadStatus.failed,
-          error: authRequiredError,
-        );
-        _activeTasks.remove(task.id);
-        _activeCancelTokens.remove(task.id);
-        await _db.updateDownload(failedTask);
-        _downloadController.add(failedTask);
-        _processQueue();
-
-        return;
-      }
+    if (!await adapter.canStartDownload(task.link)) {
+      final failedTask = task.copyWith(
+        status: DownloadStatus.failed,
+        error: adapter.authError,
+      );
+      _activeTasks.remove(task.id);
+      _activeCancelTokens.remove(task.id);
+      await _db.updateDownload(failedTask);
+      _downloadController.add(failedTask);
+      _processQueue();
+      return;
     }
 
     await _startForegroundTask(task.title);
@@ -348,13 +355,7 @@ class DownloadService {
         headers['Range'] = 'bytes=$downloadedBytes-';
       }
 
-      // Add Internet Archive auth cookies if applicable
-      if (InternetArchiveAuthService.isInternetArchiveUrl(task.link.url)) {
-        final cookieHeader = await _iaAuth.getCookieHeader();
-        if (cookieHeader != null) {
-          headers['Cookie'] = cookieHeader;
-        }
-      }
+      await adapter.prepareHeaders(headers, task.link);
 
       // Add Myrient-specific headers to avoid throttling
       if (_isMyrientUrl(task.link.url)) {
@@ -568,10 +569,10 @@ class DownloadService {
           return;
         }
 
-        // Check if this is a 401/403 auth error from Internet Archive
-        final isAuthError =
-            (statusCode == 401 || statusCode == 403) &&
-            InternetArchiveAuthService.isInternetArchiveUrl(task.link.url);
+        final isAuthError = statusCode == 401 || statusCode == 403;
+        if (isAuthError) {
+          await adapter.onAuthFailure(task.link);
+        }
 
         updatedTask = updatedTask.copyWith(
           status: DownloadStatus.failed,
@@ -638,6 +639,149 @@ class DownloadService {
       }
 
       _processQueue();
+    }
+  }
+
+  Future<void> _startTorrentDownload(
+    DownloadTask task,
+    HostAdapter adapter,
+  ) async {
+    final infohash = task.link.torrentInfohash;
+    final fileIndex = task.link.torrentFileIndex;
+    if (infohash == null || fileIndex == null) {
+      final failed = task.copyWith(
+        status: DownloadStatus.failed,
+        error: 'Torrent metadata missing on link',
+      );
+      _activeTasks.remove(task.id);
+      await _db.updateDownload(failed);
+      _downloadController.add(failed);
+      _processQueue();
+      return;
+    }
+
+    await _startForegroundTask(task.title);
+    var current = task.copyWith(status: DownloadStatus.downloading);
+    _activeTasks[task.id] = current;
+    await _db.updateDownload(current);
+    _downloadController.add(current);
+    await _updateNotifications();
+
+    try {
+      await _torrents.start(seedingEnabled: true);
+      // Magnet is the canonical source-of-record for the torrent. The
+      // scraper stores it on the catalog row but we don't propagate it
+      // to the local downloads DB; reconstruct from the infohash so the
+      // task survives cold restarts.
+      final magnet = 'magnet:?xt=urn:btih:$infohash';
+      await _torrents.addTorrent(
+        magnet: magnet,
+        fileIndices: [fileIndex],
+      );
+    } catch (e) {
+      final failed = current.copyWith(
+        status: DownloadStatus.failed,
+        error: 'Torrent failed to start: $e',
+      );
+      _activeTasks.remove(task.id);
+      await _db.updateDownload(failed);
+      _downloadController.add(failed);
+      _processQueue();
+      return;
+    }
+
+    _torrentProgressSubs[task.id]?.cancel();
+    _torrentProgressSubs[task.id] = _torrents.progressStream
+        .where((p) => p.infohash == infohash)
+        .listen((p) async {
+      if (p.files.length <= fileIndex) return;
+      final file = p.files[fileIndex];
+      final progress = file.length > 0
+          ? (file.bytesDownloaded / file.length).clamp(0.0, 1.0)
+          : 0.0;
+      current = current.copyWith(
+        downloadedBytes: file.bytesDownloaded,
+        totalBytes: file.length,
+        progress: progress,
+        bytesPerSecond: p.downloadRate,
+      );
+      _activeTasks[task.id] = current;
+      _downloadController.add(current);
+
+      // Throttle DB writes the same way the HTTP path does.
+      final now = DateTime.now();
+      final last = _lastDbUpdate[task.id];
+      if (last == null ||
+          now.difference(last) >= const Duration(milliseconds: 500)) {
+        _lastDbUpdate[task.id] = now;
+        await _db.updateDownload(current);
+        await _updateNotifications();
+      }
+
+      if (file.length > 0 && file.bytesDownloaded >= file.length) {
+        await _finishTorrentTask(task, file);
+      }
+    });
+
+    _torrentErrorSubs[task.id]?.cancel();
+    _torrentErrorSubs[task.id] =
+        _torrents.errorStream.where((e) => e.infohash == infohash).listen((e) {
+      _failTorrentTask(task, e.error, adapter);
+    });
+  }
+
+  Future<void> _finishTorrentTask(DownloadTask task, TorrentFile file) async {
+    final torrentSavePath = await _torrentSavePath();
+    if (torrentSavePath == null) return;
+    final source = File(p.join(torrentSavePath, file.path));
+    if (!await source.exists()) return;
+
+    final dest = await _storage.getDownloadPath(task.platform, task.link.filename);
+    try {
+      final destFile = File(dest);
+      if (await destFile.exists()) await destFile.delete();
+      await source.copy(dest);
+    } catch (_) {
+      // Leaving the file in the torrent dir is recoverable; the user
+      // can re-add the same task and we'll skip re-downloading thanks
+      // to libtorrent's resume data.
+      return;
+    }
+
+    final completed = task.copyWith(
+      status: DownloadStatus.completed,
+      progress: 1.0,
+      downloadedBytes: file.length,
+      totalBytes: file.length,
+      filePath: dest,
+      completedAt: DateTime.now(),
+    );
+    _activeTasks.remove(task.id);
+    await _torrentProgressSubs.remove(task.id)?.cancel();
+    await _torrentErrorSubs.remove(task.id)?.cancel();
+    await _db.updateDownload(completed);
+    _downloadController.add(completed);
+    await _updateNotifications();
+    _processQueue();
+  }
+
+  void _failTorrentTask(DownloadTask task, String error, HostAdapter adapter) {
+    final failed = task.copyWith(status: DownloadStatus.failed, error: error);
+    _activeTasks.remove(task.id);
+    _torrentProgressSubs.remove(task.id)?.cancel();
+    _torrentErrorSubs.remove(task.id)?.cancel();
+    _db.updateDownload(failed);
+    _downloadController.add(failed);
+    adapter.onAuthFailure(task.link);
+    _processQueue();
+  }
+
+  Future<String?> _torrentSavePath() async {
+    try {
+      final dir = await getApplicationSupportDirectory();
+      return p.join(dir.path, 'torrents');
+    } catch (_) {
+      return null;
     }
   }
 
