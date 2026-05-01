@@ -1,9 +1,8 @@
 """
-Catalog DB manager.
+Catalog DB manager. Owns schema + write path.
 
-Owns schema and write path. Schema version bumps require an app-side
-cleanup-on-upgrade — the app wipes its local catalog DB and re-pulls
-when SCHEMA_VERSION changes, so we never run live migrations.
+Bumps to SCHEMA_VERSION trigger an app-side wipe-and-redownload on
+the next launch; we don't run live migrations.
 """
 import json
 import os
@@ -16,10 +15,9 @@ DB_NAME = 'romdb.db'
 DB_TEMP_NAME = 'romdb_temp.db'
 DB_OLD_NAME = 'romdb_old.db'
 
-# Bump this whenever the schema below changes. The Flutter app uses
-# version.json#schema_version to decide whether its local DB is stale and
-# must be re-downloaded. Always synchronise with the app's expected
-# schema constant.
+# Bump on any schema change. The app reads version.json#schema_version
+# and wipes its local catalog DB on mismatch.
+# Mirror of: lib/services/rom_database_service.dart `kAppExpectedSchemaVersion`.
 SCHEMA_VERSION = 2
 
 con = None
@@ -141,9 +139,6 @@ def init_database():
         )
     ''')
 
-    # Schema v2: sources are first-class. Each link points back to a
-    # source via source_id. requires_auth is a structured flag instead
-    # of a substring sniff on `type`.
     cur.execute('''
         CREATE TABLE sources (
             id            TEXT PRIMARY KEY,
@@ -167,9 +162,8 @@ def init_database():
         )
     ''')
 
-    # Reserved for future user-supplied sources. Build pipeline never
-    # writes here; the app owns it. Schema lives here so users don't
-    # face a second migration when the feature ships.
+    # Reserved for user-supplied sources. The build pipeline never writes
+    # here; the app owns it.
     cur.execute('''
         CREATE TABLE user_sources (
             id           TEXT PRIMARY KEY,
@@ -180,9 +174,8 @@ def init_database():
         )
     ''')
 
-    # Torrent metadata. Populated when a source produces magnet/.torrent
-    # links (Phase 3+: MiNERVA). Each link row points at one infohash
-    # and one file index inside that torrent.
+    # Torrent metadata, deduped by infohash. Each links row that
+    # represents a file inside a torrent points here via source_id.
     cur.execute('''
         CREATE TABLE torrents (
             infohash       TEXT PRIMARY KEY,
@@ -237,12 +230,7 @@ def init_database():
 
 
 def register_source(manifest) -> None:
-    """Insert a source row from a SourceManifest.
-
-    Called once per source at the start of the build, after init_database().
-    The manifest's raw dict is round-tripped into manifest_json so the app
-    can read forward-compatible fields without code changes.
-    """
+    """Insert a source row from a SourceManifest. Called once per source."""
     cur.execute(
         'INSERT INTO sources '
         '(id, name, homepage, kind, auth_required, priority, manifest_json) '
@@ -255,6 +243,41 @@ def register_source(manifest) -> None:
             int(bool(manifest.auth_required)),
             int(manifest.priority),
             json.dumps(manifest.raw, sort_keys=True),
+        ),
+    )
+
+
+def register_torrent(
+    *,
+    infohash: str,
+    source_id: str,
+    name: str | None = None,
+    magnet: str | None = None,
+    torrent_blob: bytes | None = None,
+    total_size: int | None = None,
+    piece_length: int | None = None,
+    file_count: int | None = None,
+    trackers: list[str] | None = None,
+    added_at: int | None = None,
+) -> None:
+    """Insert a torrent row idempotently (no-op if infohash already present)."""
+    ts = added_at if added_at is not None else int(time.time())
+    cur.execute(
+        'INSERT OR IGNORE INTO torrents '
+        '(infohash, source_id, name, magnet, torrent_blob, '
+        ' total_size, piece_length, file_count, trackers_json, added_at) '
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        (
+            infohash.lower(),
+            source_id,
+            name,
+            magnet,
+            torrent_blob,
+            total_size,
+            piece_length,
+            file_count,
+            json.dumps(trackers) if trackers is not None else None,
+            ts,
         ),
     )
 
@@ -335,7 +358,15 @@ def insert_entry(entry: dict):
 
 
 def _insert_link(entry_slug: str, link: dict, *, ignore_duplicates: bool) -> None:
-    """Insert one link row, including v2 source/torrent fields."""
+    """Insert one link row.
+
+    If `_torrent_meta` is set on the link, the corresponding torrents
+    row is upserted first so scrapers don't have to call register_torrent.
+    """
+    meta = link.get('_torrent_meta')
+    if meta is not None:
+        register_torrent(**meta)
+
     sql = (
         'INSERT OR IGNORE INTO links (' if ignore_duplicates
         else 'INSERT INTO links ('

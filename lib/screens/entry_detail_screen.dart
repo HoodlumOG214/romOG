@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../services/download_service.dart';
-import '../services/internet_archive_auth_service.dart';
 import '../utils/utils.dart';
 import '../widgets/widgets.dart';
 import 'internet_archive_login_screen.dart';
@@ -481,8 +480,7 @@ class _DownloadLinkCard extends ConsumerWidget {
 
   const _DownloadLinkCard({required this.entry, required this.link});
 
-  bool get _requiresLogin =>
-      InternetArchiveAuthService.requiresLogin(link.type);
+  bool get _requiresLogin => link.requiresAuth;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -616,7 +614,7 @@ class _DownloadLinkCard extends ConsumerWidget {
   }
 
   Future<void> _startDownload(BuildContext context, WidgetRef ref) async {
-    final requiresLogin = InternetArchiveAuthService.requiresLogin(link.type);
+    final requiresLogin = link.requiresAuth;
 
     if (requiresLogin) {
       final isLoggedIn = await ref.read(iaLoggedInProvider.future);

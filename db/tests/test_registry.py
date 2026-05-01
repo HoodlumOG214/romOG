@@ -1,14 +1,12 @@
 """
-Phase 1 contract guarantees:
+Source plugin contract guarantees:
 
 - Every plugin folder under db/sources/ is discoverable.
 - Each plugin's manifest matches its folder name.
-- Each plugin satisfies the Source protocol (manifest + scrape).
-- platforms.yml only references known source ids.
-- platforms.yml never produces an empty entry list for any platform.
+- Each plugin satisfies the Source protocol.
+- platforms.yml only references known source ids and has no empty lists.
 
-Run from the db/ directory:
-    python -m pytest tests
+Run from the db/ directory: python -m pytest tests
 """
 from __future__ import annotations
 
@@ -27,7 +25,7 @@ from core import load_registry  # noqa: E402
 from core.contract import Source  # noqa: E402
 
 
-EXPECTED_SOURCES = {"internet_archive", "mariocube", "myrient", "nopaystation"}
+EXPECTED_SOURCES = {"internet_archive", "mariocube", "minerva", "nopaystation"}
 VALID_KINDS = {"catalog", "host", "hybrid"}
 
 

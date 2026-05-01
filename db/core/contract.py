@@ -1,15 +1,10 @@
 """
-The contract every source plugin implements.
+Source plugin contract.
 
-A "source" is a single upstream that the build pipeline scrapes for ROM links.
-Each source is a self-contained folder under db/sources/<source_id>/ with:
-
-    source.yml   — static manifest (id, name, kind, capabilities, ...)
-    __init__.py  — exposes a `SOURCE` symbol pointing at the Source impl
-    scraper.py   — the implementation
-
-The registry (db/core/registry.py) walks db/sources/, loads each manifest,
-imports the package, and produces a usable {id: Source} map for make.py.
+Each source lives in db/sources/<id>/ as:
+    source.yml   static manifest
+    __init__.py  exposes SOURCE
+    scraper.py   the implementation
 """
 from __future__ import annotations
 
@@ -19,11 +14,7 @@ from typing import Any, Protocol, runtime_checkable
 
 @dataclass(frozen=True)
 class SourceManifest:
-    """Static description of a source. Parsed from source.yml.
-
-    `raw` holds the full parsed YAML so the manifest can be serialized into
-    the catalog DB's sources.manifest_json column without information loss.
-    """
+    """Parsed source.yml. `raw` round-trips into sources.manifest_json."""
 
     id: str
     name: str
@@ -38,12 +29,7 @@ class SourceManifest:
 
 @dataclass
 class PlatformConfig:
-    """Per-platform configuration for a single source.
-
-    This is what each entry under a platform in platforms.yml turns into.
-    Mirrors the legacy sources.json per-entry shape minus the `scraper` key
-    (which is now the plugin folder name, not a value carried in config).
-    """
+    """One per-platform routing entry from platforms.yml."""
 
     format: str
     regions: list[str]
@@ -54,12 +40,7 @@ class PlatformConfig:
     extras: dict[str, Any] = field(default_factory=dict)
 
     def to_legacy_dict(self) -> dict[str, Any]:
-        """Render as the dict shape that legacy scraper functions expect.
-
-        Lets Phase 1 wrap existing scraper modules without rewriting their
-        internals. To be removed once all plugins consume PlatformConfig
-        directly.
-        """
+        """Dict form expected by module-level scrape() functions."""
         return {
             "format": self.format,
             "regions": list(self.regions),
@@ -73,11 +54,7 @@ class PlatformConfig:
 
 @dataclass
 class BuildContext:
-    """Shared state for a single build invocation.
-
-    Kept intentionally small. Add fields here when something *every* source
-    needs (e.g., a shared HTTP session). One-off needs go in source code.
-    """
+    """Shared state for one build invocation."""
 
     use_cached: bool = False
 
@@ -86,8 +63,8 @@ class BuildContext:
 class Source(Protocol):
     """Plugin contract.
 
-    Implementations live in db/sources/<id>/scraper.py and are exposed via
-    db/sources/<id>/__init__.py as a module-level `SOURCE` instance.
+    Plugins expose a `SOURCE` symbol at db/sources/<id>/__init__.py
+    pointing at an instance (or class) satisfying this protocol.
     """
 
     manifest: SourceManifest
@@ -98,9 +75,7 @@ class Source(Protocol):
         config: PlatformConfig,
         ctx: BuildContext,
     ) -> list[dict]:
-        """Return entry dicts for this source on this platform.
-
-        Entry shape (Phase 1, matches existing pipeline):
+        """Return entry dicts. Entry shape:
             {
                 'title': str,
                 'platform': str,

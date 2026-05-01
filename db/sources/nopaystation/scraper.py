@@ -2,8 +2,8 @@
 NoPayStation source plugin.
 
 Scrapes the NoPayStation TSV database for PS3/PSV titles. Generates RAP
-(PS3) and ZRIF (PSV) key files into static/content/ during scrape; those
-files are then served from the same GitHub raw mirror as the catalog DB.
+(PS3) and ZRIF (PSV) key files into static/content/ alongside the
+catalog DB on the GitHub raw mirror.
 """
 import os
 import requests

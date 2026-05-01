@@ -45,6 +45,5 @@ platforms:
   - x360
   - xbox
 notes: |
-  Mixed public + login-required content. Plugin scrapes both layouts;
-  login-required entries are tagged so the app can gate downloads on
-  auth state. App-side auth lifecycle is owned by IAAuthManager.
+  Mixed public + login-required content. Login-required links carry
+  requires_auth=1; the app gates downloads via IAAuthManager.

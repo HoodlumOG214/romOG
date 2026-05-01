@@ -2,9 +2,6 @@
 """
 Build driver. Loads the source registry, walks db/platforms.yml, and runs
 scrape → parse → insert for every (platform, source) pair.
-
-Plugin authors don't edit this file. Adding a source = adding a folder
-under db/sources/<id>/ with source.yml + scraper.py.
 """
 from __future__ import annotations
 
@@ -76,12 +73,11 @@ def _print_source_header(index: int, source_id: str, config: PlatformConfig) -> 
 
 
 def _tag_links(entries_out, source) -> tuple[int, int]:
-    """Stamp link rows with source_id + requires_auth.
+    """Default source_id + requires_auth on every link.
 
-    Returns (entries_count, links_count) for source_health.
-    Pipeline-level tagging keeps scrapers from having to know about DB
-    columns, but a scraper can override either field on a per-link basis
-    (the IA plugin does this for restricted entries).
+    Scrapers may override either by setting them explicitly on the link
+    dict (the IA scraper does this for restricted entries). Returns
+    (entries_count, links_count) for source_health bookkeeping.
     """
     n_entries = 0
     n_links = 0
@@ -156,8 +152,7 @@ def make(
     platforms = load_platforms(platforms_file)
     db_manager.init_database()
 
-    # Register every known source upfront so source_health rows always
-    # have a referent, even for sources that yield zero entries this run.
+    # Up-front so source_health always has a referent even for skipped sources.
     for manifest in registry.manifests.values():
         db_manager.register_source(manifest)
 
@@ -167,10 +162,6 @@ def make(
     ctx = BuildContext(use_cached=use_cached)
     source_stats = process_platforms(platforms, registry, ctx, source_filter)
 
-    # Record health for every source in the registry. Sources that ran
-    # produce 'ok'; sources skipped by --sources filter or absent from
-    # platforms.yml are recorded as 'unknown' so the app can display a
-    # neutral status rather than a broken one.
     for source_id in registry.ids():
         stats = source_stats.get(source_id)
         if stats is None:
@@ -192,7 +183,6 @@ def make(
 
 
 def _parse_args(argv: list[str]) -> dict:
-    """Tiny ad-hoc CLI parser to keep the previous flag surface working."""
     args = argv[1:] if len(argv) > 1 else []
     out = {
         'use_cached': '--use-cached' in args,
@@ -202,10 +192,7 @@ def _parse_args(argv: list[str]) -> dict:
     for i, arg in enumerate(args):
         if arg == '--platforms' and i + 1 < len(args):
             out['platforms_file'] = args[i + 1]
-        elif arg == '--sources' and i + 1 < len(args):
-            out['source_filter'] = [s.strip() for s in args[i + 1].split(',')]
-        # Backwards-compat aliases for the old flag names:
-        elif arg == '--scrapers' and i + 1 < len(args):
+        elif arg in ('--sources', '--scrapers') and i + 1 < len(args):
             out['source_filter'] = [s.strip() for s in args[i + 1].split(',')]
     return out
 

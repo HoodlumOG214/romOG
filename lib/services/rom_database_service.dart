@@ -9,11 +9,9 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/models.dart';
 
-/// The schema version the app currently understands. The build pipeline
-/// stamps version.json#schema_version with the same constant
-/// (db/database/db_manager.py:SCHEMA_VERSION). When they diverge, the
-/// local catalog DB is wiped and re-downloaded — we don't run live
-/// migrations.
+/// Catalog schema this build expects. Mirror of
+/// db/database/db_manager.py:SCHEMA_VERSION. On mismatch the local DB
+/// is wiped and re-downloaded; no live migrations.
 const int kAppExpectedSchemaVersion = 2;
 
 class DatabaseVersion {
@@ -25,15 +23,12 @@ class DatabaseVersion {
   final int links;
   final int platforms;
 
-  /// Schema version of this DB build. Pre-v2 builds omit this field; we
-  /// treat absent as schema 1.
+  /// Schema version of this DB build. Older builds omit this; absent → 1.
   final int schemaVersion;
 
-  /// Minimum app version required to consume this DB. Pre-v2 builds omit
-  /// this field; absent means no minimum.
+  /// Minimum app version that can read this DB. Older builds omit this.
   final String? minAppVersion;
 
-  /// Number of sources represented in the build. Optional.
   final int? sources;
 
   const DatabaseVersion({
@@ -67,16 +62,15 @@ class DatabaseVersion {
 
 /// Result of probing the remote DB against this app build.
 class DatabaseUpdateCheck {
-  /// New DB metadata if an update is available.
+  /// New DB metadata when an update is available.
   final DatabaseVersion? available;
 
-  /// True when the local DB schema is older than what this app expects;
-  /// the catalog DB must be wiped and re-downloaded before opening.
+  /// True when the local DB schema is older than this app expects.
+  /// Caller must delete + re-download before opening.
   final bool localIsStale;
 
-  /// True when the remote DB requires a newer app build than the user
-  /// has installed. Caller should surface a "please update the app"
-  /// prompt and not download the new DB.
+  /// True when the remote DB requires a newer app build. Caller should
+  /// prompt the user to update and not download.
   final bool appTooOld;
 
   const DatabaseUpdateCheck({
@@ -126,10 +120,8 @@ class RomDatabaseService {
       return false;
     }
 
-    // Cleanup-on-upgrade: if the local DB was built against an older
-    // schema than this app expects, wipe it and force a re-download.
-    // Catalog data is fully regenerable; user state (downloads,
-    // favorites) lives in a separate sqflite file and isn't touched.
+    // Old schema → wipe and re-download. Catalog is regenerable; the
+    // app's downloads/favorites DB lives elsewhere and isn't touched.
     if (await isLocalDatabaseStale()) {
       await deleteDatabase();
       return false;
@@ -225,18 +217,16 @@ class RomDatabaseService {
     }
   }
 
-  /// Whether a previously-downloaded local DB has a schema older than this
-  /// app expects. Caller should `deleteDatabase()` and re-download before
-  /// opening — we never run live migrations.
+  /// Local DB is from an older schema than this app expects. Caller
+  /// should `deleteDatabase()` and re-download before opening.
   Future<bool> isLocalDatabaseStale() async {
     final local = await getLocalVersion();
     if (local == null) return false;
     return local.schemaVersion < kAppExpectedSchemaVersion;
   }
 
-  /// Lexicographic semver-ish compare for dotted numeric strings (e.g.
-  /// "1.2.0" < "1.10.0"). Falls back to a string compare if either side
-  /// isn't purely numeric. Used to gate against `min_app_version`.
+  /// Numeric semver-ish compare ("1.2.0" < "1.10.0"). Falls back to
+  /// string compare when either side has non-numeric components.
   static bool _isVersionLessThan(String a, String b) {
     List<int>? parts(String v) {
       final out = <int>[];

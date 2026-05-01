@@ -9,7 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/models.dart';
 import 'database_service.dart';
-import 'internet_archive_auth_service.dart';
+import 'internet_archive_auth_manager.dart';
 import 'notification_service.dart';
 import 'storage_service.dart';
 
@@ -19,7 +19,7 @@ class DownloadService {
   final DatabaseService _db;
   final StorageService _storage;
   final NotificationService _notifications;
-  final InternetArchiveAuthService _iaAuth;
+  final IAAuthManager _iaAuth;
   final Dio _dio;
   Dio? _nativeDio;
   final _uuid = const Uuid();
@@ -52,7 +52,7 @@ class DownloadService {
     required DatabaseService db,
     required StorageService storage,
     required NotificationService notifications,
-    required InternetArchiveAuthService iaAuth,
+    required IAAuthManager iaAuth,
     Dio? dio,
   }) : _db = db,
        _storage = storage,
@@ -274,10 +274,7 @@ class DownloadService {
     final cancelToken = CancelToken();
     _activeCancelTokens[task.id] = cancelToken;
 
-    // Check if this download requires Internet Archive login
-    final requiresLogin = InternetArchiveAuthService.requiresLogin(
-      task.link.type,
-    );
+    final requiresLogin = task.link.requiresAuth;
     if (requiresLogin) {
       final isLoggedIn = await _iaAuth.isLoggedIn();
       if (!isLoggedIn) {
@@ -348,12 +345,10 @@ class DownloadService {
         headers['Range'] = 'bytes=$downloadedBytes-';
       }
 
-      // Add Internet Archive auth cookies if applicable
-      if (InternetArchiveAuthService.isInternetArchiveUrl(task.link.url)) {
-        final cookieHeader = await _iaAuth.getCookieHeader();
-        if (cookieHeader != null) {
-          headers['Cookie'] = cookieHeader;
-        }
+      // IA: probe the cached session, then inject the Authorization header.
+      if (IAAuthManager.isInternetArchiveUrl(task.link.url)) {
+        await _iaAuth.ensureFresh();
+        await _iaAuth.applyHeaders(headers);
       }
 
       // Add Myrient-specific headers to avoid throttling
@@ -568,10 +563,14 @@ class DownloadService {
           return;
         }
 
-        // Check if this is a 401/403 auth error from Internet Archive
+        // 401/403 from IA → bump the auth manager's failure counter
+        // (circuit-breaks after 3 in a row).
         final isAuthError =
             (statusCode == 401 || statusCode == 403) &&
-            InternetArchiveAuthService.isInternetArchiveUrl(task.link.url);
+            IAAuthManager.isInternetArchiveUrl(task.link.url);
+        if (isAuthError) {
+          await _iaAuth.recordAuthFailure();
+        }
 
         updatedTask = updatedTask.copyWith(
           status: DownloadStatus.failed,

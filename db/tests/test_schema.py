@@ -1,18 +1,15 @@
 """
-Phase 2 schema guarantees:
+Catalog schema guarantees:
 
-- The catalog DB has the v2 tables (sources, source_health, user_sources,
-  torrents) and v2 link columns.
-- `register_source` persists every manifest field.
-- `record_source_health` upserts.
-- `insert_entry` writes v2 link fields when present and defaults sanely
-  when absent.
-- Pipeline `_tag_links` defaults link.source_id to the manifest id and
-  honours per-link overrides (e.g. IA's restricted-link requires_auth).
-- platforms.yml + registry combo touches every source manifest.
+- All expected tables and link columns exist.
+- register_source persists every manifest field.
+- record_source_health upserts.
+- insert_entry writes link fields with sane defaults.
+- _tag_links defaults link.source_id to the manifest id and honours
+  per-link overrides (e.g. IA marking a link as requires_auth).
+- user_sources stays untouched by the build pipeline.
 
-Run:
-    python -m pytest tests
+Run: python -m pytest tests
 """
 from __future__ import annotations
 
@@ -110,22 +107,22 @@ def test_record_source_health_upserts(fresh_db):
         db_manager.register_source(manifest)
 
     db_manager.record_source_health(
-        "myrient", "ok", entry_count=5, link_count=10, last_checked=1000
+        "minerva", "ok", entry_count=5, link_count=10, last_checked=1000
     )
     cur = db_manager.cur
     row = cur.execute(
         "SELECT status, entry_count, link_count, last_checked "
-        "FROM source_health WHERE source_id='myrient'"
+        "FROM source_health WHERE source_id='minerva'"
     ).fetchone()
     assert row == ("ok", 5, 10, 1000)
 
     # upsert: same source_id replaces
     db_manager.record_source_health(
-        "myrient", "down", reason="404", last_checked=2000,
+        "minerva", "down", reason="404", last_checked=2000,
     )
     row = cur.execute(
         "SELECT status, reason, last_checked FROM source_health "
-        "WHERE source_id='myrient'"
+        "WHERE source_id='minerva'"
     ).fetchone()
     assert row == ("down", "404", 2000)
 
@@ -144,13 +141,13 @@ def test_insert_entry_writes_v2_link_columns(fresh_db):
                 "name": "Sample",
                 "type": "Game",
                 "format": "nes",
-                "url": "https://example.com/x.zip",
+                "url": "magnet:?xt=urn:btih:" + ("a" * 40),
                 "filename": "x.zip",
-                "host": "Myrient",
+                "host": "MiNERVA Archive",
                 "size": 100,
                 "size_str": "100",
-                "source_url": "https://example.com/",
-                "source_id": "myrient",
+                "source_url": "https://minerva-archive.org/",
+                "source_id": "minerva",
                 "requires_auth": 0,
             },
             {
@@ -177,13 +174,13 @@ def test_insert_entry_writes_v2_link_columns(fresh_db):
     ).fetchall()
     assert rows == [
         ("internet_archive", 1, None),
-        ("myrient", 0, None),
+        ("minerva", 0, None),
     ]
 
 
 def test_tag_links_defaults_to_manifest_id():
     registry = load_registry(DB_ROOT)
-    source = registry.get("myrient")
+    source = registry.get("minerva")
 
     entries = [
         {"links": [{"name": "a"}, {"name": "b"}]},
@@ -193,7 +190,7 @@ def test_tag_links_defaults_to_manifest_id():
     assert (n_entries, n_links) == (2, 3)
     for entry in entries:
         for link in entry["links"]:
-            assert link["source_id"] == "myrient"
+            assert link["source_id"] == "minerva"
             assert link["requires_auth"] == 0
 
 

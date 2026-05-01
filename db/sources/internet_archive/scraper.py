@@ -1,10 +1,10 @@
 """
 Internet Archive source plugin.
 
-Scrapes both publicly-linked files and login-required ("restricted")
-files from archive.org item pages. Restricted entries are tagged in the
-link `type` string; the app gates downloads on auth state. Login on the
-build side uses CI credentials stored at secrets/internet_archive_creds.json.
+Scrapes publicly-linked and login-required ("restricted") files from
+archive.org item pages. CI uses credentials at
+secrets/internet_archive_creds.json to log in for restricted listings;
+the app gates restricted downloads on the user's own session.
 """
 import re
 import urllib.parse
@@ -194,11 +194,9 @@ def scrape(source, platform, use_cached=False):
             if parsed_entries:
                 for entry in parsed_entries:
                     for link in entry['links']:
-                        # Schema-level signal — used by the app's link
-                        # resolver and download adapter to gate on auth.
+                        # Structured flag the app's resolver/adapter read.
                         link['requires_auth'] = 1
-                        # Legacy substring kept until Phase 5 removes the
-                        # last UI consumer of the type string.
+                        # Human-readable suffix for UI label fallback.
                         link['type'] += " (Requires Internet Archive Log in)"
                 entries.extend(parsed_entries)
             else:

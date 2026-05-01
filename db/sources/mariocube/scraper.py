@@ -1,9 +1,8 @@
 """
 MarioCube source plugin.
 
-Fetches plain-text directory listings (curl-style User-Agent) from
-archive.mariocube.com, strips ANSI colour codes, parses size + filename,
-and emits entries.
+archive.mariocube.com serves a plain-text directory listing to curl-style
+User-Agents. Strip ANSI colour, split into (size, filename), emit entries.
 """
 import html
 import re

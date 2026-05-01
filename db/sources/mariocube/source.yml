@@ -12,6 +12,5 @@ platforms:
   - dsi
   - wii
 notes: |
-  Wii / DSi mirror. Returns a plain-text directory listing to curl-style
-  clients (User-Agent: curl/8.0). Uses ANSI-colored output we strip
-  during parsing.
+  Wii / DSi mirror. Serves a plain-text ANSI-colored listing to
+  User-Agent: curl/8.0; the scraper strips colour codes before parsing.

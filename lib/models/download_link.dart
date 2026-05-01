@@ -9,9 +9,8 @@ class DownloadLink {
   final String sizeStr;
   final String sourceUrl;
 
-  // Schema v2 fields. All nullable so the model survives a one-off load
-  // of an older DB (which the app then wipes anyway via cleanup-on-upgrade),
-  // and so non-torrent links don't carry torrent fields.
+  // Optional fields — sourceId/torrent fields are absent for old DBs and
+  // for non-torrent hosts respectively.
   final String? sourceId;
   final bool requiresAuth;
   final String? torrentInfohash;
