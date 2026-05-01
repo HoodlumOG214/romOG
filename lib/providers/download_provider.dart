@@ -7,6 +7,7 @@ import '../services/services.dart';
 import 'internet_archive_auth_provider.dart';
 import 'library_provider.dart';
 import 'settings_provider.dart';
+import 'torrent_provider.dart';
 
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();
@@ -29,16 +30,25 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();
 });
 
+final hostAdapterRegistryProvider = Provider<HostAdapterRegistry>((ref) {
+  final iaAuth = ref.watch(internetArchiveAuthProvider);
+  return HostAdapterRegistry(
+    internetArchive: InternetArchiveAdapter(iaAuth),
+  );
+});
+
 final downloadServiceProvider = Provider<DownloadService>((ref) {
   final db = ref.watch(databaseServiceProvider);
   final storage = ref.watch(storageServiceProvider);
   final notifications = ref.watch(notificationServiceProvider);
-  final iaAuth = ref.watch(internetArchiveAuthProvider);
+  final adapters = ref.watch(hostAdapterRegistryProvider);
+  final torrents = ref.watch(torrentServiceProvider);
   return DownloadService(
     db: db,
     storage: storage,
     notifications: notifications,
-    iaAuth: iaAuth,
+    adapters: adapters,
+    torrents: torrents,
   );
 });
 

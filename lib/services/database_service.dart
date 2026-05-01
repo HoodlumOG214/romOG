@@ -6,7 +6,7 @@ import '../models/models.dart';
 class DatabaseService {
   static Database? _database;
   static const String _dbName = 'romgi.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   Future<Database> get database async {
     _database ??= await _initDatabase();
@@ -61,10 +61,24 @@ class DatabaseService {
         'CREATE INDEX idx_favorites_added_at ON favorites(added_at DESC)',
       );
     }
+
+    if (oldVersion < 4) {
+      // Source / torrent link fields. NULL on rows from older app
+      // versions; new downloads populate them so torrent downloads
+      // survive a process restart.
+      for (final column in [
+        'link_source_id TEXT',
+        'link_requires_auth INTEGER NOT NULL DEFAULT 0',
+        'link_torrent_infohash TEXT',
+        'link_torrent_file_index INTEGER',
+        'link_torrent_file_path TEXT',
+      ]) {
+        await db.execute('ALTER TABLE downloads ADD COLUMN $column');
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Downloads table for tracking download queue and history
     await db.execute('''
       CREATE TABLE downloads (
         id TEXT PRIMARY KEY,
@@ -81,6 +95,11 @@ class DatabaseService {
         link_size INTEGER NOT NULL,
         link_size_str TEXT NOT NULL,
         link_source_url TEXT NOT NULL,
+        link_source_id TEXT,
+        link_requires_auth INTEGER NOT NULL DEFAULT 0,
+        link_torrent_infohash TEXT,
+        link_torrent_file_index INTEGER,
+        link_torrent_file_path TEXT,
         status INTEGER NOT NULL DEFAULT 0,
         progress REAL NOT NULL DEFAULT 0.0,
         downloaded_bytes INTEGER NOT NULL DEFAULT 0,
