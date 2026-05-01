@@ -8,6 +8,7 @@ import '../services/rom_database_service.dart';
 import '../services/storage_service.dart';
 import '../utils/utils.dart';
 import 'internet_archive_login_screen.dart';
+import 'sources_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -271,6 +272,24 @@ class SettingsScreen extends ConsumerWidget {
                 _SectionHeader(title: 'Accounts'),
 
                 _InternetArchiveAccountTile(),
+
+                const Divider(height: 32),
+
+                _SectionHeader(title: 'Sources'),
+
+                ListTile(
+                  leading: const Icon(Icons.cloud_outlined),
+                  title: const Text('ROM sources'),
+                  subtitle: const Text(
+                    'Status of the catalogs that feed this app',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const SourcesScreen(),
+                    ),
+                  ),
+                ),
 
                 const Divider(height: 32),
 

@@ -80,6 +80,8 @@ dev_dependencies:
   # Spec lives at pigeons/torrent_api.dart; regenerate via
   #   dart run pigeon --input pigeons/torrent_api.dart
   pigeon: ^22.7.0
+  # In-memory SQLite for unit-test fixtures.
+  sqflite_common_ffi: ^2.3.3
 
 # App icon configuration
 flutter_launcher_icons:

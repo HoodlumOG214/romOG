@@ -37,42 +37,9 @@ jobs:
           restore-keys: |
             scraper-cache-
 
-      - name: Mirror MiNERVA artefacts
-        # ETag-cached; only re-downloads when the upstream files change.
-        # hashes.db is ~1.8 GB so this matters. Skipping on failure
-        # leaves the MiNERVA scraper to no-op rather than failing the
-        # whole build.
-        run: |
-          mkdir -p data/minerva
-          set -e
-          fetch_if_changed() {
-            local url=$1
-            local dest=$2
-            local etag_file="$dest.etag"
-            local existing_etag=""
-            if [ -f "$etag_file" ]; then
-              existing_etag=$(cat "$etag_file")
-            fi
-            local response_headers
-            response_headers=$(curl -sI -A "Mozilla/5.0" "$url")
-            local remote_etag
-            remote_etag=$(printf '%s' "$response_headers" \
-              | awk -F': *' 'tolower($1)=="etag" {print $2}' | tr -d '\r"')
-            if [ -n "$remote_etag" ] && [ "$remote_etag" = "$existing_etag" ] && [ -s "$dest" ]; then
-              echo "  [minerva] $dest unchanged (etag $existing_etag), skipping download"
-              return 0
-            fi
-            echo "  [minerva] fetching $url -> $dest"
-            curl -fSL -A "Mozilla/5.0" --retry 3 --retry-delay 10 -o "$dest" "$url" || {
-              echo "  [minerva] download failed; leaving stale copy (if any) in place"
-              return 0
-            }
-            if [ -n "$remote_etag" ]; then
-              printf '%s' "$remote_etag" > "$etag_file"
-            fi
-          }
-          fetch_if_changed https://minerva-archive.org/assets/index.txt.gz data/minerva/index.txt.gz
-          fetch_if_changed https://minerva-archive.org/assets/hashes.db    data/minerva/hashes.db
+      # MiNERVA artefacts are mirrored inside workflow.py via
+      # scripts/download_minerva_artefacts.py — same code path as a
+      # local `python workflow.py` run. ETag-cached, resumable.
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt

@@ -208,14 +208,19 @@ def scrape_with_artefacts(
 
 
 class MinervaSource:
-    """Plugin entry point. Skips gracefully if artefacts aren't mirrored."""
+    """Plugin entry point. Skips gracefully if artefacts aren't mirrored
+    or the local hashes.db is corrupt (e.g. truncated mid-download).
+    """
 
     def __init__(self, manifest: SourceManifest):
         self.manifest = manifest
         self._index: list[str] | None = None
         self._db: sqlite3.Connection | None = None
+        self._artefacts_unusable = False
 
     def _ensure_artefacts(self) -> bool:
+        if self._artefacts_unusable:
+            return False
         if self._index is not None and self._db is not None:
             return True
         index_path = _resolve_artefact(ENV_INDEX_TXT, f'{DEFAULT_DATA_DIR}/index.txt.gz')
@@ -230,10 +235,33 @@ class MinervaSource:
                 f"skipping. Set {ENV_INDEX_TXT}/{ENV_HASHES_DB} or place "
                 f"files under {DEFAULT_DATA_DIR}/."
             )
+            self._artefacts_unusable = True
             return False
 
-        self._index = _load_index(index_path)
-        self._db = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
+        try:
+            self._index = _load_index(index_path)
+        except Exception as e:
+            print(f"  [minerva] index unreadable ({index_path}): {e}; skipping.")
+            self._artefacts_unusable = True
+            return False
+
+        try:
+            db = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
+            # Trip a fast read to confirm the file is actually a SQLite
+            # database. A truncated download will fail here rather than
+            # later when we try to scan the files table.
+            db.execute('SELECT name FROM sqlite_master LIMIT 1').fetchone()
+            db.execute('SELECT 1 FROM files LIMIT 1').fetchone()
+            self._db = db
+        except sqlite3.DatabaseError as e:
+            print(
+                f"  [minerva] hashes.db at {db_path} is unusable ({e}); "
+                f"skipping. Re-run `python workflow.py` to resume the "
+                f"download (a .part file is preserved on disk)."
+            )
+            self._artefacts_unusable = True
+            return False
+
         return True
 
     def scrape(
@@ -244,9 +272,14 @@ class MinervaSource:
     ) -> list[dict]:
         if not self._ensure_artefacts():
             return []
-        return scrape_with_artefacts(
-            config, platform, index=self._index, db=self._db,
-        )
+        try:
+            return scrape_with_artefacts(
+                config, platform, index=self._index, db=self._db,
+            )
+        except sqlite3.DatabaseError as e:
+            print(f"  [minerva] query failed ({e}); skipping rest of build.")
+            self._artefacts_unusable = True
+            return []
 
 
 SOURCE = MinervaSource
