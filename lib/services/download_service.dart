@@ -669,11 +669,7 @@ class DownloadService {
 
     try {
       await _torrents.start(seedingEnabled: true);
-      // Magnet is the canonical source-of-record for the torrent. The
-      // scraper stores it on the catalog row but we don't propagate it
-      // to the local downloads DB; reconstruct from the infohash so the
-      // task survives cold restarts.
-      final magnet = 'magnet:?xt=urn:btih:$infohash';
+      final magnet = _buildMagnetUri(infohash);
       await _torrents.addTorrent(
         magnet: magnet,
         fileIndices: [fileIndex],
@@ -785,6 +781,47 @@ class DownloadService {
     }
   }
 
+  /// Public-tracker list bundled into every magnet URI we hand to
+  /// libtorrent. HTTPS trackers come first because some networks (and
+  /// most Android emulators behind NAT) block UDP outbound.
+  static const _publicTrackers = <String>[
+    'https://tracker.gbitt.info:443/announce',
+    'https://tracker.nanoha.org:443/announce',
+    'https://opentracker.i2p.rocks:443/announce',
+    'https://1337.abcvg.info:443/announce',
+    'http://tracker.openbittorrent.com:80/announce',
+    'http://tracker.opentrackr.org:1337/announce',
+    'udp://tracker.opentrackr.org:1337/announce',
+    'udp://open.demonii.com:1337/announce',
+    'udp://exodus.desync.com:6969/announce',
+    'udp://explodie.org:6969/announce',
+    'udp://opentracker.io:6969/announce',
+    'udp://tracker.torrent.eu.org:451/announce',
+    'udp://bt1.archive.org:6969/announce',
+    'udp://open.stealth.si:80/announce',
+  ];
+
+  String _buildMagnetUri(String infohash) {
+    final parts = <String>['xt=urn:btih:$infohash'];
+    for (final t in _publicTrackers) {
+      parts.add('tr=${Uri.encodeQueryComponent(t)}');
+    }
+    return 'magnet:?${parts.join('&')}';
+  }
+
+  Future<void> _stopTorrentSubscription(DownloadTask task) async {
+    await _torrentProgressSubs.remove(task.id)?.cancel();
+    await _torrentErrorSubs.remove(task.id)?.cancel();
+    final infohash = task.link.torrentInfohash;
+    if (infohash != null) {
+      try {
+        await _torrents.cancel(infohash);
+      } catch (_) {
+        // Best-effort — the runtime may already have removed the torrent.
+      }
+    }
+  }
+
   Future<void> _updateNotifications() async {
     if (_activeTasks.isEmpty) {
       await _notifications.cancelProgressNotification();
@@ -818,10 +855,23 @@ class DownloadService {
 
   Future<void> pauseDownload(String id) async {
     if (_activeTasks.containsKey(id)) {
-      _pausedTaskIds.add(id);
-      _activeCancelTokens[id]?.cancel('Paused by user');
+      final task = _activeTasks[id]!;
+      if (task.link.isTorrent) {
+        // Tear the torrent down on the libtorrent side; the .fastresume
+        // file persists so resume picks up where we left off.
+        await _stopTorrentSubscription(task);
+        _activeTasks.remove(id);
+        final paused = task.copyWith(status: DownloadStatus.paused);
+        await _db.updateDownload(paused);
+        _downloadController.add(paused);
+        await _updateNotifications();
+        _processQueue();
+      } else {
+        _pausedTaskIds.add(id);
+        _activeCancelTokens[id]?.cancel('Paused by user');
+      }
     } else {
-      // Update status for queued download
+      // Queued (pending) download — flip status without touching the runtime.
       final task = await _db.getDownload(id);
       if (task != null && task.status == DownloadStatus.pending) {
         final updated = task.copyWith(status: DownloadStatus.paused);
@@ -842,6 +892,10 @@ class DownloadService {
   }
 
   Future<void> cancelDownload(String id) async {
+    final task = _activeTasks[id] ?? await _db.getDownload(id);
+    if (task != null && task.link.isTorrent) {
+      await _stopTorrentSubscription(task);
+    }
     if (_activeTasks.containsKey(id)) {
       _activeCancelTokens[id]?.cancel('Cancelled by user');
     }

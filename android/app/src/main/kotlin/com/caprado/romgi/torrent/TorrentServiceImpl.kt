@@ -3,6 +3,7 @@ package com.caprado.romgi.torrent
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.frostwire.jlibtorrent.AddTorrentParams
 import com.frostwire.jlibtorrent.AlertListener
 import com.frostwire.jlibtorrent.Priority
@@ -15,6 +16,7 @@ import com.frostwire.jlibtorrent.TorrentInfo
 import com.frostwire.jlibtorrent.TorrentStatus
 import com.frostwire.jlibtorrent.alerts.Alert
 import com.frostwire.jlibtorrent.alerts.AlertType
+import com.frostwire.jlibtorrent.alerts.MetadataReceivedAlert
 import com.frostwire.jlibtorrent.alerts.TorrentErrorAlert
 import com.frostwire.jlibtorrent.alerts.TorrentFinishedAlert
 import io.flutter.plugin.common.BinaryMessenger
@@ -30,6 +32,8 @@ import java.util.concurrent.TimeUnit
  * Wraps a [SessionManager] and surfaces it through [TorrentHostApi].
  * One session per app process. [start] is idempotent.
  */
+private const val TAG = "TorrentService"
+
 class TorrentServiceImpl(
     @Suppress("unused") private val context: Context,
     binaryMessenger: BinaryMessenger,
@@ -39,6 +43,12 @@ class TorrentServiceImpl(
     private val mainHandler = Handler(Looper.getMainLooper())
     private val knownInfohashes: MutableSet<String> =
         Collections.newSetFromMap(ConcurrentHashMap())
+
+    // File indices the user actually wants per torrent. Magnet adds
+    // can't apply priorities until metadata arrives — we replay these
+    // when MetadataReceivedAlert fires.
+    private val pendingPriorities: MutableMap<String, List<Long>> =
+        ConcurrentHashMap()
 
     private val pollingExecutor: ScheduledExecutorService =
         Executors.newSingleThreadScheduledExecutor { r ->
@@ -61,11 +71,18 @@ class TorrentServiceImpl(
         currentSettings = settings
         File(settings.savePath).mkdirs()
 
-        val sm = SessionManager().also {
-            it.start(SessionParams(buildSettingsPack(settings)))
-            it.addListener(alertListener)
+        Log.i(TAG, "starting session, savePath=${settings.savePath} dht=${settings.dhtEnabled} seeding=${settings.seedingEnabled}")
+        try {
+            val sm = SessionManager().also {
+                it.start(SessionParams(buildSettingsPack(settings)))
+                it.addListener(alertListener)
+            }
+            session = sm
+            Log.i(TAG, "session started")
+        } catch (t: Throwable) {
+            Log.e(TAG, "failed to start session", t)
+            throw t
         }
-        session = sm
 
         pollFuture = pollingExecutor.scheduleAtFixedRate(
             ::emitProgressSnapshot, 1, 1, TimeUnit.SECONDS
@@ -95,7 +112,7 @@ class TorrentServiceImpl(
         when {
             magnet != null && magnet.isNotBlank() -> {
                 val parsed = AddTorrentParams.parseMagnetUri(magnet)
-                infohash = parsed.infoHashes().v1.toHex().lowercase()
+                infohash = parsed.infoHash().toHex().lowercase()
                 if (sm.find(Sha1Hash(infohash)) == null) {
                     sm.download(magnet, saveDir)
                 }
@@ -115,7 +132,19 @@ class TorrentServiceImpl(
         }
 
         knownInfohashes += infohash
+        if (request.fileIndices.isNotEmpty()) {
+            pendingPriorities[infohash] = request.fileIndices
+        }
+        // Best-effort immediate apply (works when metadata is already on
+        // disk from a prior session); the metadata-received alert is
+        // what actually completes this for fresh magnets.
         handle?.let { applyFilePriorities(it, request.fileIndices) }
+
+        Log.i(
+            TAG,
+            "added torrent infohash=$infohash files=${request.fileIndices} " +
+                "hasMetadata=${handle?.torrentFile() != null}"
+        )
         return infohash
     }
 
@@ -151,6 +180,7 @@ class TorrentServiceImpl(
         override fun types(): IntArray = intArrayOf(
             AlertType.TORRENT_FINISHED.swig(),
             AlertType.TORRENT_ERROR.swig(),
+            AlertType.METADATA_RECEIVED.swig(),
         )
 
         override fun alert(alert: Alert<*>) {
@@ -169,6 +199,12 @@ class TorrentServiceImpl(
                         events.onError(ih, msg) { /* fire-and-forget */ }
                     }
                 }
+                AlertType.METADATA_RECEIVED -> {
+                    val a = alert as MetadataReceivedAlert
+                    val ih = a.handle().infoHash().toHex().lowercase()
+                    val wanted = pendingPriorities.remove(ih) ?: return
+                    applyFilePriorities(a.handle(), wanted)
+                }
                 else -> {}
             }
         }
@@ -179,6 +215,15 @@ class TorrentServiceImpl(
         for (ih in knownInfohashes.toList()) {
             val handle = sm.find(Sha1Hash(ih)) ?: continue
             val progress = buildProgress(handle)
+            // Periodic heartbeat so we can see in logcat that polling is
+            // alive and what state libtorrent is in for each torrent.
+            Log.d(
+                TAG,
+                "tick infohash=$ih state=${progress.state} " +
+                    "peers=${progress.peers} seeds=${progress.seeds} " +
+                    "down=${progress.bytesDownloaded}/${progress.totalSize} " +
+                    "rate=${progress.downloadRate}B/s"
+            )
             mainHandler.post {
                 events.onProgress(progress) { /* fire-and-forget */ }
             }
@@ -211,7 +256,7 @@ class TorrentServiceImpl(
             uploadRate = status.uploadRate().toLong(),
             peers = status.numPeers().toLong(),
             seeds = status.numSeeds().toLong(),
-            error = status.errc()?.message() ?: "",
+            error = status.errorCode()?.message() ?: "",
             files = files,
         )
     }
@@ -219,15 +264,17 @@ class TorrentServiceImpl(
     private fun applyFilePriorities(handle: TorrentHandle, requestedIndices: List<Long>) {
         val info = handle.torrentFile() ?: return
         val n = info.numFiles()
+        // Priority.FOUR is libtorrent's actual default download priority.
+        // (The enum entry called NORMAL is value 1 — lower than default.)
         if (requestedIndices.isEmpty()) {
-            for (i in 0 until n) handle.filePriority(i, Priority.NORMAL)
+            for (i in 0 until n) handle.filePriority(i, Priority.FOUR)
             return
         }
         val wanted = requestedIndices.map { it.toInt() }.toSet()
         for (i in 0 until n) {
             val current = handle.filePriority(i)
             val next = when {
-                i in wanted -> Priority.NORMAL
+                i in wanted -> Priority.FOUR
                 current == Priority.IGNORE -> Priority.IGNORE
                 else -> current
             }
@@ -255,7 +302,6 @@ class TorrentServiceImpl(
     }
 
     private fun stateToString(state: TorrentStatus.State?): String = when (state) {
-        TorrentStatus.State.QUEUED_FOR_CHECKING -> "queued"
         TorrentStatus.State.CHECKING_FILES -> "checking_files"
         TorrentStatus.State.DOWNLOADING_METADATA -> "downloading_metadata"
         TorrentStatus.State.DOWNLOADING -> "downloading"
@@ -268,10 +314,13 @@ class TorrentServiceImpl(
 
     private fun priorityToInt(p: Priority): Int = when (p) {
         Priority.IGNORE -> 0
-        Priority.LOW -> 1
-        Priority.NORMAL -> 4
-        Priority.HIGH -> 6
-        Priority.TOP_PRIORITY -> 7
+        Priority.NORMAL -> 1
+        Priority.TWO -> 2
+        Priority.THREE -> 3
+        Priority.FOUR -> 4
+        Priority.FIVE -> 5
+        Priority.SIX -> 6
+        Priority.SEVEN -> 7
         else -> 4
     }
 

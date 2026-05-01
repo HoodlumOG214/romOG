@@ -28,13 +28,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
-
-        // arm64-only: every supported device is arm64-v8a, and skipping
-        // the other ABIs keeps the APK ~40 MB smaller given jlibtorrent's
-        // native library footprint.
-        ndk {
-            abiFilters += listOf("arm64-v8a")
-        }
     }
 
     buildTypes {
@@ -46,6 +39,19 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // Release ships arm64 only — every supported device is arm64-v8a,
+            // and dropping x86/armv7 keeps the APK ~40 MB smaller.
+            ndk {
+                abiFilters += listOf("arm64-v8a")
+            }
+        }
+        debug {
+            // Debug also bundles x86_64 so we can run on the Windows
+            // emulator (where qemu2 can only run x86 guests on x86 hosts).
+            ndk {
+                abiFilters += listOf("arm64-v8a", "x86_64")
+            }
         }
     }
 
@@ -70,9 +76,13 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
-    // jlibtorrent: torrent runtime. Java glue + arm64 native.
+    // jlibtorrent: torrent runtime. Pinned to the latest version
+    // currently published to Maven Central. Verify before bumping at:
+    //   https://central.sonatype.com/artifact/com.frostwire/jlibtorrent
     // Major bumps may move the API used in TorrentServiceImpl.kt.
-    val jlibtorrentVersion = "1.2.19.0"
+    val jlibtorrentVersion = "1.2.0.18"
     implementation("com.frostwire:jlibtorrent:$jlibtorrentVersion")
     implementation("com.frostwire:jlibtorrent-android-arm64:$jlibtorrentVersion")
+    // Only included in debug APKs so emulator testing on x86 hosts works.
+    debugImplementation("com.frostwire:jlibtorrent-android-x86_64:$jlibtorrentVersion")
 }
