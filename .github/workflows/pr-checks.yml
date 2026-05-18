@@ -26,6 +26,10 @@ jobs:
       - name: Install runtime + test deps
         run: pip install -r db/requirements.txt pytest
 
+      - name: Build MiNERVA test fixture
+        working-directory: db
+        run: python tests/fixtures/build_minerva_fixture.py
+
       - name: Run pytest
         working-directory: db
         run: python -m pytest tests -v

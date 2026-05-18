@@ -547,7 +547,9 @@ class DownloadService {
             if (await file.exists()) {
               await file.delete();
             }
-          } catch (error) {}
+          } catch (_) {
+            // Best-effort cleanup — the user can retry either way.
+          }
 
           // Set back to pending so it will be retried automatically
           updatedTask = updatedTask.copyWith(
