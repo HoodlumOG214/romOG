@@ -56,8 +56,8 @@ android {
     }
 
     packaging {
-        // jlibtorrent's sub-jars contain duplicate licence files; exclude
-        // them so the resource merger doesn't fail.
+        // libtorrent4j's sub-jars contain duplicate licence files;
+        // exclude them so the resource merger doesn't fail.
         resources {
             excludes += listOf(
                 "META-INF/LICENSE*",
@@ -65,6 +65,13 @@ android {
                 "META-INF/AL2.0",
                 "META-INF/LGPL2.1"
             )
+        }
+        // libtorrent4j's loader uses System.loadLibrary which needs the
+        // .so extracted from the APK. The newer "compressed in-APK" mode
+        // (default for release) breaks that load with
+        // UnsatisfiedLinkError. Force the older extract-on-install mode.
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
 }
@@ -76,13 +83,14 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
-    // jlibtorrent: torrent runtime. Pinned to the latest version
-    // currently published to Maven Central. Verify before bumping at:
-    //   https://central.sonatype.com/artifact/com.frostwire/jlibtorrent
-    // Major bumps may move the API used in TorrentServiceImpl.kt.
-    val jlibtorrentVersion = "1.2.0.18"
-    implementation("com.frostwire:jlibtorrent:$jlibtorrentVersion")
-    implementation("com.frostwire:jlibtorrent-android-arm64:$jlibtorrentVersion")
+    // libtorrent4j: torrent runtime. Maintained fork/successor of
+    // jlibtorrent by the same author, wrapping libtorrent 2.x. Used
+    // by LibreTorrent and most current Android torrent clients.
+    // Verify before bumping at:
+    //   https://central.sonatype.com/artifact/org.libtorrent4j/libtorrent4j
+    val libtorrent4jVersion = "2.1.0-32"
+    implementation("org.libtorrent4j:libtorrent4j:$libtorrent4jVersion")
+    implementation("org.libtorrent4j:libtorrent4j-android-arm64:$libtorrent4jVersion")
     // Only included in debug APKs so emulator testing on x86 hosts works.
-    debugImplementation("com.frostwire:jlibtorrent-android-x86_64:$jlibtorrentVersion")
+    debugImplementation("org.libtorrent4j:libtorrent4j-android-x86_64:$libtorrent4jVersion")
 }

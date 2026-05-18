@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/torrent_service.dart';
-import 'settings_provider.dart';
 
 final torrentServiceProvider = Provider<TorrentService>((ref) {
   final service = TorrentService();
@@ -9,10 +8,10 @@ final torrentServiceProvider = Provider<TorrentService>((ref) {
   return service;
 });
 
-/// Boots the runtime once settings have loaded. Await before addTorrent.
+/// Boots the runtime. Await before addTorrent. Seeding is always off
+/// — the runtime pauses each torrent on finish.
 final torrentRuntimeProvider = FutureProvider<TorrentService>((ref) async {
   final service = ref.watch(torrentServiceProvider);
-  final settings = ref.watch(settingsProvider);
-  await service.start(seedingEnabled: settings.seedingEnabled);
+  await service.start(seedingEnabled: false);
   return service;
 });

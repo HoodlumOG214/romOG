@@ -2,6 +2,13 @@
     <!-- Internet permission for API calls and downloads -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Required for libtorrent's listen socket setup. INTERNET alone
+         authorizes outbound connections; libtorrent additionally
+         enumerates network interfaces during listen setup, which
+         returns EACCES on bind() without these. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
     <!-- Storage permissions for downloading ROMs -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
@@ -64,6 +71,19 @@
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="dataSync"
             android:exported="false" />
+
+        <!-- FileProvider exposes downloaded ROM files to other apps via
+             content:// URIs. Required for Intent.createChooser to share
+             the file with an emulator/handler app. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

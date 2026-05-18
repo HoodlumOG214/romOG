@@ -155,7 +155,7 @@ Output is `db/romdb.db`. Adding a new source = drop a folder under `db/sources/<
 | `flutter_secure_storage`      | Encrypted IA session storage            |
 | `webview_flutter`             | IA login flow                           |
 | `pigeon`                      | Type-safe Dart ↔ Kotlin torrent bridge  |
-| `jlibtorrent` (Android)       | BitTorrent runtime with file priorities |
+| `libtorrent4j` (Android)      | BitTorrent runtime with file priorities |
 
 ## Disclaimer
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- ROMs may end up in shared external storage (with MANAGE_EXTERNAL_STORAGE),
+         app-specific external storage, or app documents — cover all three. -->
+    <external-path name="external" path="." />
+    <external-files-path name="external_files" path="." />
+    <files-path name="internal_files" path="." />
+    <root-path name="root" path="/" />
+</paths>

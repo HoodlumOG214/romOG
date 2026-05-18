@@ -2,13 +2,17 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:open_filex/open_filex.dart';
 
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../utils/utils.dart';
 import 'entry_detail_screen.dart';
+
+/// Talks to the native side of "open with…" so we can force the system
+/// chooser via Intent.createChooser instead of the user's saved default.
+const _openChannel = MethodChannel('com.caprado.romgi/open');
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -417,17 +421,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
             FilledButton.icon(
               onPressed: () async {
                 Navigator.pop(dialogContext);
-                final result = await OpenFilex.open(item.filePath!);
-                if (result.type != ResultType.done && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        result.type == ResultType.noAppToOpen
-                            ? 'No app found to open this file type'
-                            : 'Could not open file: ${result.message}',
-                      ),
-                    ),
+                try {
+                  await _openChannel.invokeMethod<void>(
+                    'openWithChooser',
+                    {'path': item.filePath},
                   );
+                } on PlatformException catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Could not open file: ${e.message ?? e.code}')),
+                    );
+                  }
                 }
               },
               icon: const Icon(Icons.open_in_new),

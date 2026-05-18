@@ -70,23 +70,6 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
 
-                SwitchListTile(
-                  secondary: const Icon(Icons.share),
-                  title: const Text('Seed torrents'),
-                  subtitle: const Text(
-                    'Share completed torrents back to peers while the app '
-                    'is open. Turn off to download only.',
-                  ),
-                  value: settings.seedingEnabled,
-                  onChanged: (value) async {
-                    await ref
-                        .read(settingsProvider.notifier)
-                        .setSeedingEnabled(value);
-                    final torrent = ref.read(torrentServiceProvider);
-                    await torrent.updateSeeding(value);
-                  },
-                ),
-
                 const Divider(height: 32),
 
                 _SectionHeader(title: 'Download Locations'),

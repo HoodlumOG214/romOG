@@ -668,12 +668,28 @@ class DownloadService {
     await _updateNotifications();
 
     try {
-      await _torrents.start(seedingEnabled: true);
-      final magnet = _buildMagnetUri(infohash);
-      await _torrents.addTorrent(
-        magnet: magnet,
-        fileIndices: [fileIndex],
-      );
+      // Seeding is intentionally never enabled: when a torrent finishes,
+      // it's paused and no upload occurs. The Pigeon API still has a
+      // seedingEnabled field, but we always pass false.
+      await _torrents.start(seedingEnabled: false);
+      // Prefer the real .torrent file when we can derive its URL —
+      // this gives libtorrent the webseeds (HTTPS fallback peers) that
+      // a bare magnet URI strips out. Critical for archive.org content
+      // where the swarm is often dead and HTTPS is the actual reliable
+      // path.
+      final torrentBytes = await _tryFetchTorrentFile(task.link);
+      if (torrentBytes != null) {
+        await _torrents.addTorrent(
+          torrentBytes: torrentBytes,
+          fileIndices: [fileIndex],
+        );
+      } else {
+        final magnet = _buildMagnetUri(infohash);
+        await _torrents.addTorrent(
+          magnet: magnet,
+          fileIndices: [fileIndex],
+        );
+      }
     } catch (e) {
       final failed = current.copyWith(
         status: DownloadStatus.failed,
@@ -690,16 +706,24 @@ class DownloadService {
     _torrentProgressSubs[task.id] = _torrents.progressStream
         .where((p) => p.infohash == infohash)
         .listen((p) async {
-      if (p.files.length <= fileIndex) return;
-      final file = p.files[fileIndex];
-      final progress = file.length > 0
+      // Until metadata arrives, p.files is empty. We still want the UI
+      // to show "Fetching metadata", peer/seed counts, and the wire
+      // download rate so the user sees the torrent is alive.
+      final hasMetadata = p.files.length > fileIndex;
+      final TorrentFile? file = hasMetadata ? p.files[fileIndex] : null;
+      final isComplete = file != null && file.length > 0 &&
+          file.bytesDownloaded >= file.length;
+      final progress = (file != null && file.length > 0)
           ? (file.bytesDownloaded / file.length).clamp(0.0, 1.0)
           : 0.0;
       current = current.copyWith(
-        downloadedBytes: file.bytesDownloaded,
-        totalBytes: file.length,
+        downloadedBytes: file?.bytesDownloaded ?? 0,
+        totalBytes: file?.length ?? 0,
         progress: progress,
-        bytesPerSecond: p.downloadRate,
+        bytesPerSecond: isComplete ? 0 : p.downloadRate,
+        peers: p.peers,
+        seeds: p.seeds,
+        fetchingMetadata: !hasMetadata,
       );
       _activeTasks[task.id] = current;
       _downloadController.add(current);
@@ -714,7 +738,7 @@ class DownloadService {
         await _updateNotifications();
       }
 
-      if (file.length > 0 && file.bytesDownloaded >= file.length) {
+      if (isComplete) {
         await _finishTorrentTask(task, file);
       }
     });
@@ -755,6 +779,17 @@ class DownloadService {
     _activeTasks.remove(task.id);
     await _torrentProgressSubs.remove(task.id)?.cancel();
     await _torrentErrorSubs.remove(task.id)?.cancel();
+    // Remove the torrent from libtorrent so it stops uploading and
+    // stops talking to peers. The on-disk file we copied above is
+    // unaffected.
+    final infohash = task.link.torrentInfohash;
+    if (infohash != null) {
+      try {
+        await _torrents.cancel(infohash);
+      } catch (_) {
+        // Best-effort; the runtime may already have removed it.
+      }
+    }
     await _db.updateDownload(completed);
     _downloadController.add(completed);
     await _updateNotifications();
@@ -807,6 +842,36 @@ class DownloadService {
       parts.add('tr=${Uri.encodeQueryComponent(t)}');
     }
     return 'magnet:?${parts.join('&')}';
+  }
+
+  /// archive.org download URL → identifier (the bit between
+  /// `/download/` and the next slash).
+  static final _archiveOrgIdRegex =
+      RegExp(r'^https?://(?:[a-z0-9.-]+\.)?archive\.org/download/([^/]+)/');
+
+  /// Try to fetch the canonical `.torrent` file for the given link.
+  /// Currently only archive.org URLs are supported, since archive.org
+  /// publishes a predictable `<id>_archive.torrent` for every item and
+  /// it carries webseed URLs that let downloads work even when the
+  /// swarm is empty or the UDP tracker is firewalled. Returns null
+  /// (and the caller falls back to a magnet) on any failure.
+  Future<List<int>?> _tryFetchTorrentFile(DownloadLink link) async {
+    final m = _archiveOrgIdRegex.firstMatch(link.url);
+    if (m == null) return null;
+    final id = m.group(1);
+    if (id == null || id.isEmpty) return null;
+    final torrentUrl = 'https://archive.org/download/$id/${id}_archive.torrent';
+    try {
+      final response = await _dio.get<List<int>>(
+        torrentUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final bytes = response.data;
+      if (bytes != null && bytes.isNotEmpty) return bytes;
+    } catch (_) {
+      // Best-effort — caller falls back to magnet.
+    }
+    return null;
   }
 
   Future<void> _stopTorrentSubscription(DownloadTask task) async {

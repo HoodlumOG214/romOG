@@ -200,11 +200,12 @@ class _CurrentDownloadTile extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            // Progress bar
+            // Progress bar — indeterminate while fetching torrent metadata
+            // (we have no total yet, so a fixed bar would just sit at 0%).
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: task.progress,
+                value: task.fetchingMetadata ? null : task.progress,
                 minHeight: 8,
               ),
             ),
@@ -213,7 +214,9 @@ class _CurrentDownloadTile extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  task.progressText,
+                  task.fetchingMetadata
+                      ? 'Fetching metadata…'
+                      : task.progressText,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 Row(
@@ -228,14 +231,25 @@ class _CurrentDownloadTile extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      '${(task.progress * 100).toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    if (!task.fetchingMetadata)
+                      Text(
+                        '${(task.progress * 100).toStringAsFixed(1)}%',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                   ],
                 ),
               ],
             ),
+            if (task.link.isTorrent && task.peers >= 0) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${task.peers} peer${task.peers == 1 ? '' : 's'} • '
+                '${task.seeds} seed${task.seeds == 1 ? '' : 's'}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ],
         ),
       ),

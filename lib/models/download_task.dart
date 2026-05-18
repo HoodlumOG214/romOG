@@ -26,6 +26,11 @@ class DownloadTask {
   final DateTime createdAt;
   final DateTime? completedAt;
   final bool hiddenFromHistory;
+  // Torrent-only, in-memory only (not persisted). -1 means "unknown"
+  // so the UI can distinguish a fresh torrent task from "0 peers".
+  final int peers;
+  final int seeds;
+  final bool fetchingMetadata;
 
   const DownloadTask({
     required this.id,
@@ -44,6 +49,9 @@ class DownloadTask {
     required this.createdAt,
     this.completedAt,
     this.hiddenFromHistory = false,
+    this.peers = -1,
+    this.seeds = -1,
+    this.fetchingMetadata = false,
   });
 
   DownloadTask copyWith({
@@ -56,6 +64,9 @@ class DownloadTask {
     String? error,
     DateTime? completedAt,
     bool? hiddenFromHistory,
+    int? peers,
+    int? seeds,
+    bool? fetchingMetadata,
   }) {
     return DownloadTask(
       id: id,
@@ -74,6 +85,9 @@ class DownloadTask {
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
       hiddenFromHistory: hiddenFromHistory ?? this.hiddenFromHistory,
+      peers: peers ?? this.peers,
+      seeds: seeds ?? this.seeds,
+      fetchingMetadata: fetchingMetadata ?? this.fetchingMetadata,
     );
   }
 
