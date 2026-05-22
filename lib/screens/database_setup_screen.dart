@@ -118,6 +118,7 @@ class DatabaseSetupNotifier extends StateNotifier<DatabaseSetupState> {
   void retry() {
     checkDatabase();
   }
+
 }
 
 /// Screen shown when database needs to be downloaded
@@ -153,37 +154,21 @@ class _DatabaseSetupScreenState extends ConsumerState<DatabaseSetupScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              // App icon
-              Icon(
-                Icons.gamepad_rounded,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary,
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildContent(context, state),
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Romgi',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'ROM Browser & Downloader',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-              ),
-              const Spacer(),
-              _buildContent(context, state),
-              const Spacer(),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
