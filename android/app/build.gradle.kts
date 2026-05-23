@@ -93,4 +93,9 @@ dependencies {
     implementation("org.libtorrent4j:libtorrent4j-android-arm64:$libtorrent4jVersion")
     // Only included in debug APKs so emulator testing on x86 hosts works.
     debugImplementation("org.libtorrent4j:libtorrent4j-android-x86_64:$libtorrent4jVersion")
+
+    // Apache Commons Compress: 7z extraction for disc-based ROM archives.
+    implementation("org.apache.commons:commons-compress:1.27.1")
+    // XZ (LZMA2) decoder — required by commons-compress for 7z extraction.
+    implementation("org.tukaani:xz:1.10")
 }

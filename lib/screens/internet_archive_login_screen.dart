@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -44,7 +47,6 @@ class _InternetArchiveLoginScreenState
               _currentUrl = url;
             });
 
-            // Check if we've reached the account page (successful login)
             if (url.startsWith(_accountUrl) || url == 'https://archive.org/') {
               await _extractAndSaveCookies();
             }
@@ -61,35 +63,91 @@ class _InternetArchiveLoginScreenState
     if (_exchangeInProgress) return;
     _exchangeInProgress = true;
     try {
-      final cookieResult = await _controller.runJavaScriptReturningResult(
-        'document.cookie',
-      );
+      // Fetch s3.php from within the WebView via XHR so that all cookies
+      // (including HttpOnly ones like logged-in-sig) are sent automatically.
+      // document.cookie misses HttpOnly cookies, which broke the old flow.
+      final result = await _controller.runJavaScriptReturningResult('''
+        (function() {
+          try {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://archive.org/account/s3.php", false);
+            xhr.send();
+            var html = xhr.responseText;
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, "text/html");
 
-      // "name1=value1; name2=value2"
-      final cookieMap = <String, String>{};
-      final rawString = cookieResult.toString();
+            // Find S3 keys: 16-char alphanumeric values in input elements.
+            // IA removed name="access"/name="secret" attributes, so we
+            // match by value pattern. DOMParser docs need getAttribute
+            // since .value is empty on non-live DOMs.
+            function findKeys(d) {
+              var allInputs = d.querySelectorAll("input");
+              var keys = [];
+              for (var i = 0; i < allInputs.length; i++) {
+                var v = allInputs[i].getAttribute("value") || "";
+                if (v.length === 16 && /^[A-Za-z0-9]+\$/.test(v)) {
+                  keys.push(v);
+                }
+              }
+              return keys;
+            }
+
+            var keys = findKeys(doc);
+            if (keys.length < 2) {
+              // No keys yet — generate them via the s3.php form.
+              var xhr2 = new XMLHttpRequest();
+              xhr2.open("POST", "https://archive.org/account/s3.php", false);
+              xhr2.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+              xhr2.send("generateNewKeys=Generate+New+Keys&confirm=on");
+              html = xhr2.responseText;
+              doc = parser.parseFromString(html, "text/html");
+              keys = findKeys(doc);
+            }
+
+            var access = keys.length > 0 ? keys[0] : "";
+            var secret = keys.length > 1 ? keys[1] : "";
+            var cookieStr = document.cookie;
+            var user = cookieStr.split("; ")
+              .find(function(c) { return c.startsWith("logged-in-user="); });
+            var username = user ? user.split("=")[1] : "";
+            return JSON.stringify({access: access, secret: secret, username: username});
+          } catch(e) {
+            return JSON.stringify({error: e.message});
+          }
+        })()
+      ''');
+
+      final rawString = result.toString();
       final cleanString = rawString.startsWith('"') && rawString.endsWith('"')
           ? rawString.substring(1, rawString.length - 1)
+          .replaceAll(r'\"', '"')
+          .replaceAll(r'\\', r'\')
           : rawString;
 
-      for (final pair in cleanString.split('; ')) {
-        final idx = pair.indexOf('=');
-        if (idx > 0) {
-          cookieMap[pair.substring(0, idx)] = pair.substring(idx + 1);
-        }
+      Map<String, dynamic> parsed;
+      try {
+        parsed = jsonDecode(cleanString) as Map<String, dynamic>;
+      } catch (_) {
+        return;
       }
 
-      // Need the IA session cookies to bootstrap the S3-key fetch.
-      final user = cookieMap['logged-in-user'];
-      if (user == null || user.isEmpty) return;
+      if (parsed.containsKey('error') || parsed.isEmpty) return;
 
-      final auth = ref.read(internetArchiveAuthProvider);
-      final session = await auth.completeLoginFromCookies(cookieMap);
+      final access = parsed['access'] as String? ?? '';
+      final secret = parsed['secret'] as String? ?? '';
+      final username = Uri.decodeComponent(parsed['username'] as String? ?? '');
 
-      if (!mounted) return;
+      // Get ALL cookies (including HttpOnly) via Android's native CookieManager.
+      // document.cookie misses HttpOnly cookies like logged-in-sig which
+      // IA requires for download auth.
+      const channel = MethodChannel('com.caprado.romgi/open');
+      final nativeCookies = await channel.invokeMethod<String>(
+        'getWebViewCookies',
+        {'url': 'https://archive.org'},
+      ) ?? '';
 
-      if (session == null) {
-        // Login succeeded but s3.php didn't yield keys; let the user retry.
+      if (access.isEmpty || secret.isEmpty) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -101,6 +159,16 @@ class _InternetArchiveLoginScreenState
         );
         return;
       }
+
+      final auth = ref.read(internetArchiveAuthProvider);
+      final session = await auth.saveSessionFromKeys(
+        username: username,
+        accessKey: access,
+        secretKey: secret,
+        cookies: nativeCookies,
+      );
+
+      if (!mounted) return;
 
       ref.invalidate(iaLoggedInProvider);
       ref.invalidate(iaUsernameProvider);

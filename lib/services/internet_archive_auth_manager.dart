@@ -18,6 +18,10 @@ class IASession {
   final IAValidationStatus lastValidationStatus;
   final int failureCount;
 
+  /// Raw cookie header for download auth (includes HttpOnly cookies
+  /// like logged-in-sig that S3 keys can't replace).
+  final String cookies;
+
   const IASession({
     this.schemaVersion = 2,
     required this.username,
@@ -27,6 +31,7 @@ class IASession {
     required this.lastValidatedAt,
     this.lastValidationStatus = IAValidationStatus.unverified,
     this.failureCount = 0,
+    this.cookies = '',
   });
 
   IASession copyWith({
@@ -37,6 +42,7 @@ class IASession {
     DateTime? lastValidatedAt,
     IAValidationStatus? lastValidationStatus,
     int? failureCount,
+    String? cookies,
   }) {
     return IASession(
       schemaVersion: schemaVersion,
@@ -47,6 +53,7 @@ class IASession {
       lastValidatedAt: lastValidatedAt ?? this.lastValidatedAt,
       lastValidationStatus: lastValidationStatus ?? this.lastValidationStatus,
       failureCount: failureCount ?? this.failureCount,
+      cookies: cookies ?? this.cookies,
     );
   }
 
@@ -59,6 +66,7 @@ class IASession {
         'lastValidatedAt': lastValidatedAt.toIso8601String(),
         'lastValidationStatus': lastValidationStatus.name,
         'failureCount': failureCount,
+        'cookies': cookies,
       };
 
   factory IASession.fromJson(Map<String, dynamic> json) {
@@ -71,6 +79,7 @@ class IASession {
       lastValidatedAt: _parseDate(json['lastValidatedAt']),
       lastValidationStatus: _parseStatus(json['lastValidationStatus']),
       failureCount: json['failureCount'] as int? ?? 0,
+      cookies: json['cookies'] as String? ?? '',
     );
   }
 
@@ -164,12 +173,17 @@ class IAAuthManager {
         'LOW ${s.accessKey}:${s.secretKey}';
   }
 
-  /// Inject the IA Authorization header into a headers map. Used by
-  /// the download path that builds the headers map directly.
+  /// Inject IA auth headers. Uses cookies for download auth (required
+  /// for archive.org/download/) and S3 LOW header as fallback.
   Future<void> applyHeaders(Map<String, dynamic> headers) async {
     final s = await _readSession();
     if (s == null) return;
-    headers['Authorization'] = 'LOW ${s.accessKey}:${s.secretKey}';
+    if (s.cookies.isNotEmpty) {
+      headers['Cookie'] = s.cookies;
+      headers['Referer'] = 'https://archive.org/';
+    } else {
+      headers['Authorization'] = 'LOW ${s.accessKey}:${s.secretKey}';
+    }
   }
 
   /// Complete login after the WebView captures cookies. GETs
@@ -213,6 +227,27 @@ class IAAuthManager {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Save a session directly from S3 keys (extracted via WebView JS).
+  Future<IASession> saveSessionFromKeys({
+    required String username,
+    required String accessKey,
+    required String secretKey,
+    String cookies = '',
+  }) async {
+    final now = DateTime.now();
+    final session = IASession(
+      username: username,
+      accessKey: accessKey,
+      secretKey: secretKey,
+      createdAt: now,
+      lastValidatedAt: now,
+      lastValidationStatus: IAValidationStatus.ok,
+      cookies: cookies,
+    );
+    await _writeSession(session);
+    return session;
   }
 
   /// Probe `s3.us.archive.org/?check_auth=1` and update the persisted

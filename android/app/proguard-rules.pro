@@ -33,3 +33,10 @@
 
 # Pigeon-generated bridge + our impl talk to native code.
 -keep class com.caprado.romgi.torrent.** { *; }
+-keep class com.caprado.romgi.seven_zip.** { *; }
+
+# Apache Commons Compress: 7z extraction.
+-keep class org.apache.commons.compress.** { *; }
+-dontwarn org.apache.commons.compress.**
+-keep class org.tukaani.xz.** { *; }
+-dontwarn org.tukaani.xz.**

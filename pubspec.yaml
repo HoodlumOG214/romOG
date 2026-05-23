@@ -58,7 +58,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
   # WebView for OAuth/login flows
-  webview_flutter: ^4.10.0
+  webview_flutter: ^4.13.1
 
   # Disk space information
   disk_space_plus: ^0.2.6

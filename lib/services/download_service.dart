@@ -14,6 +14,7 @@ import '../torrent/torrent_api.g.dart';
 import 'database_service.dart';
 import 'host_adapter.dart';
 import 'notification_service.dart';
+import 'seven_zip_service.dart';
 import 'storage_service.dart';
 import 'torrent_service.dart';
 
@@ -25,6 +26,7 @@ class DownloadService {
   final NotificationService _notifications;
   final HostAdapterRegistry _adapters;
   final TorrentService _torrents;
+  final SevenZipService _sevenZip;
   final Dio _dio;
   Dio? _nativeDio;
   final _uuid = const Uuid();
@@ -62,12 +64,14 @@ class DownloadService {
     required NotificationService notifications,
     required HostAdapterRegistry adapters,
     required TorrentService torrents,
+    required SevenZipService sevenZip,
     Dio? dio,
   })  : _db = db,
         _storage = storage,
         _notifications = notifications,
         _adapters = adapters,
         _torrents = torrents,
+        _sevenZip = sevenZip,
         _dio = dio ?? Dio();
 
   Future<void> initialize() async {
@@ -401,8 +405,31 @@ class DownloadService {
       var retryCount = 0;
       while (true) {
         try {
+          // IA redirects downloads to CDN nodes (e.g. dn721009.ca.archive.org).
+          // Dio may not forward Cookie headers on cross-host redirects.
+          // Resolve the final URL first, then download with headers intact.
+          var downloadUrl = task.link.url;
+          if (headers.containsKey('Cookie')) {
+            try {
+              final headResp = await dio.head(
+                task.link.url,
+                cancelToken: cancelToken,
+                options: Options(
+                  headers: headers,
+                  followRedirects: true,
+                  validateStatus: (s) => s != null && s < 500,
+                ),
+              );
+              if (headResp.realUri.toString() != task.link.url) {
+                downloadUrl = headResp.realUri.toString();
+              }
+            } catch (_) {
+              // Fall through to direct download
+            }
+          }
+
           await dio.download(
-            task.link.url,
+            downloadUrl,
             downloadPath,
             cancelToken: cancelToken,
             deleteOnError: false,
@@ -496,7 +523,7 @@ class DownloadService {
         await _updateNotifications();
 
         try {
-          final extractedPath = await _extractZip(downloadPath, task.platform);
+          final extractedPath = await _extractArchive(downloadPath, task.platform);
           // Only delete archive after successful extraction
           await File(downloadPath).delete();
           updatedTask = updatedTask.copyWith(
@@ -662,6 +689,63 @@ class DownloadService {
       return;
     }
 
+    // If the destination file (or its extracted form) already exists
+    // (e.g. previous session completed but the task was re-queued after
+    // a hot restart), skip the torrent and go straight to completion.
+    final destPath = await _storage.getDownloadPath(
+        task.platform, task.link.filename);
+    final destFile = File(destPath);
+    var existingPath = destPath;
+    var alreadyComplete = false;
+
+    if (await destFile.exists()) {
+      final fileSize = await destFile.length();
+      if (fileSize > 0 && (task.link.size == 0 || fileSize == task.link.size)) {
+        alreadyComplete = true;
+      }
+    }
+
+    // Also check for an already-extracted file (archive was deleted after
+    // extraction in a previous session).
+    if (!alreadyComplete && _shouldExtract(task.link.filename)) {
+      final platformDir = await _storage.getPlatformDirectory(task.platform);
+      final baseName = task.link.filename
+          .replaceAll(RegExp(r'\.(zip|7z)$', caseSensitive: false), '');
+      try {
+        await for (final entity in platformDir.list()) {
+          if (entity is File) {
+            final name = p.basenameWithoutExtension(entity.path);
+            if (name == baseName) {
+              existingPath = entity.path;
+              alreadyComplete = true;
+              break;
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (alreadyComplete) {
+      var finalPath = existingPath;
+      if (existingPath == destPath && _shouldExtract(task.link.filename)) {
+        try {
+          finalPath = await _extractArchive(destPath, task.platform);
+          await File(destPath).delete();
+        } catch (_) {}
+      }
+      final completed = task.copyWith(
+        status: DownloadStatus.completed,
+        progress: 1.0,
+        filePath: finalPath,
+        completedAt: DateTime.now(),
+      );
+      _activeTasks.remove(task.id);
+      await _db.updateDownload(completed);
+      _downloadController.add(completed);
+      _processQueue();
+      return;
+    }
+
     await _startForegroundTask(task.title);
     var current = task.copyWith(status: DownloadStatus.downloading);
     _activeTasks[task.id] = current;
@@ -770,20 +854,37 @@ class DownloadService {
       return;
     }
 
+    var finalPath = dest;
+
+    if (_shouldExtract(task.link.filename)) {
+      final extracting = task.copyWith(status: DownloadStatus.extracting);
+      _activeTasks[task.id] = extracting;
+      _downloadController.add(extracting);
+      await _db.updateDownload(extracting);
+
+      try {
+        finalPath = await _extractArchive(dest, task.platform);
+        await File(dest).delete();
+      } catch (_) {
+        // Extraction failed — keep the downloaded file as-is.
+      }
+    }
+
     final completed = task.copyWith(
       status: DownloadStatus.completed,
       progress: 1.0,
       downloadedBytes: file.length,
       totalBytes: file.length,
-      filePath: dest,
+      filePath: finalPath,
       completedAt: DateTime.now(),
     );
     _activeTasks.remove(task.id);
     await _torrentProgressSubs.remove(task.id)?.cancel();
     await _torrentErrorSubs.remove(task.id)?.cancel();
-    // Remove the torrent from libtorrent so it stops uploading and
-    // stops talking to peers. The on-disk file we copied above is
-    // unaffected.
+    // Remove the torrent from libtorrent and clean up the source file
+    // in the torrent save directory — the ROM has been copied (and
+    // extracted if needed) to its final location, so the torrent data
+    // is no longer needed.
     final infohash = task.link.torrentInfohash;
     if (infohash != null) {
       try {
@@ -791,6 +892,22 @@ class DownloadService {
       } catch (_) {
         // Best-effort; the runtime may already have removed it.
       }
+    }
+    try {
+      if (await source.exists()) await source.delete();
+      // Also clean up empty parent directories left behind.
+      var parent = source.parent;
+      final saveDir = Directory(torrentSavePath);
+      while (parent.path != saveDir.path) {
+        if (await parent.list().isEmpty) {
+          await parent.delete();
+          parent = parent.parent;
+        } else {
+          break;
+        }
+      }
+    } catch (_) {
+      // Best-effort cleanup.
     }
     await _db.updateDownload(completed);
     _downloadController.add(completed);
@@ -1031,9 +1148,19 @@ class DownloadService {
 
   bool _shouldExtract(String filename) {
     final lower = filename.toLowerCase();
+    return lower.endsWith('.zip') || lower.endsWith('.7z');
+  }
 
-    // Only extract ZIP files - 7z is not supported by the archive package at this time
-    return lower.endsWith('.zip');
+  Future<String> _extractArchive(String archivePath, String platform) async {
+    if (archivePath.toLowerCase().endsWith('.7z')) {
+      return _extract7z(archivePath, platform);
+    }
+    return _extractZip(archivePath, platform);
+  }
+
+  Future<String> _extract7z(String archivePath, String platform) async {
+    final platformDir = await _storage.getPlatformDirectory(platform);
+    return _sevenZip.extract(archivePath, platformDir.path);
   }
 
   Future<String> _extractZip(String zipPath, String platform) async {

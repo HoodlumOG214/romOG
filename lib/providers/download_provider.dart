@@ -37,18 +37,24 @@ final hostAdapterRegistryProvider = Provider<HostAdapterRegistry>((ref) {
   );
 });
 
+final sevenZipServiceProvider = Provider<SevenZipService>((ref) {
+  return SevenZipService();
+});
+
 final downloadServiceProvider = Provider<DownloadService>((ref) {
   final db = ref.watch(databaseServiceProvider);
   final storage = ref.watch(storageServiceProvider);
   final notifications = ref.watch(notificationServiceProvider);
   final adapters = ref.watch(hostAdapterRegistryProvider);
   final torrents = ref.watch(torrentServiceProvider);
+  final sevenZip = ref.watch(sevenZipServiceProvider);
   return DownloadService(
     db: db,
     storage: storage,
     notifications: notifications,
     adapters: adapters,
     torrents: torrents,
+    sevenZip: sevenZip,
   );
 });
 

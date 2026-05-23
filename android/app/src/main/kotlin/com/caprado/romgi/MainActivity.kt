@@ -1,7 +1,10 @@
 package com.caprado.romgi
 
 import android.content.Intent
+import android.webkit.CookieManager
 import androidx.core.content.FileProvider
+import com.caprado.romgi.seven_zip.SevenZipHostApi
+import com.caprado.romgi.seven_zip.SevenZipServiceImpl
 import com.caprado.romgi.torrent.TorrentHostApi
 import com.caprado.romgi.torrent.TorrentServiceImpl
 import io.flutter.embedding.android.FlutterActivity
@@ -20,6 +23,11 @@ class MainActivity : FlutterActivity() {
         )
         torrentService = service
         TorrentHostApi.setUp(flutterEngine.dartExecutor.binaryMessenger, service)
+
+        val sevenZipService = SevenZipServiceImpl(
+            flutterEngine.dartExecutor.binaryMessenger,
+        )
+        SevenZipHostApi.setUp(flutterEngine.dartExecutor.binaryMessenger, sevenZipService)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, OPEN_CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -49,6 +57,18 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     } catch (t: Throwable) {
                         result.error("OPEN_FAILED", t.message, null)
+                    }
+                } else if (call.method == "getWebViewCookies") {
+                    val url = call.argument<String>("url")
+                    if (url == null) {
+                        result.error("ARG", "url is required", null)
+                        return@setMethodCallHandler
+                    }
+                    try {
+                        val cookies = CookieManager.getInstance().getCookie(url) ?: ""
+                        result.success(cookies)
+                    } catch (t: Throwable) {
+                        result.error("COOKIE_FAILED", t.message, null)
                     }
                 } else {
                     result.notImplemented()

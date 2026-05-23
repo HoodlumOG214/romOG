@@ -5,6 +5,7 @@ export 'internet_archive_auth_manager.dart';
 export 'link_resolver.dart';
 export 'notification_service.dart';
 export 'rom_database_service.dart';
+export 'seven_zip_service.dart';
 export 'sources_service.dart';
 export 'storage_service.dart';
 export 'torrent_service.dart';
