@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:archive/archive_io.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
@@ -792,6 +791,9 @@ class DownloadService {
     _torrentProgressSubs[task.id] = _torrents.progressStream
         .where((p) => p.infohash == infohash)
         .listen((p) async {
+      // Ignore ticks after we've started finishing this task.
+      if (!_activeTasks.containsKey(task.id)) return;
+
       // Until metadata arrives, p.files is empty. We still want the UI
       // to show "Fetching metadata", peer/seed counts, and the wire
       // download rate so the user sees the torrent is alive.
@@ -825,6 +827,7 @@ class DownloadService {
       }
 
       if (isComplete) {
+        _activeTasks.remove(task.id);
         await _finishTorrentTask(task, file);
       }
     });
@@ -858,7 +861,6 @@ class DownloadService {
 
     if (_shouldExtract(task.link.filename)) {
       final extracting = task.copyWith(status: DownloadStatus.extracting);
-      _activeTasks[task.id] = extracting;
       _downloadController.add(extracting);
       await _db.updateDownload(extracting);
 
@@ -878,7 +880,6 @@ class DownloadService {
       filePath: finalPath,
       completedAt: DateTime.now(),
     );
-    _activeTasks.remove(task.id);
     await _torrentProgressSubs.remove(task.id)?.cancel();
     await _torrentErrorSubs.remove(task.id)?.cancel();
     // Remove the torrent from libtorrent and clean up the source file
@@ -1152,64 +1153,8 @@ class DownloadService {
   }
 
   Future<String> _extractArchive(String archivePath, String platform) async {
-    if (archivePath.toLowerCase().endsWith('.7z')) {
-      return _extract7z(archivePath, platform);
-    }
-    return _extractZip(archivePath, platform);
-  }
-
-  Future<String> _extract7z(String archivePath, String platform) async {
     final platformDir = await _storage.getPlatformDirectory(platform);
     return _sevenZip.extract(archivePath, platformDir.path);
-  }
-
-  Future<String> _extractZip(String zipPath, String platform) async {
-    final platformDir = await _storage.getPlatformDirectory(platform);
-    final existingFiles = <String>{};
-    try {
-      await for (final entity in platformDir.list(recursive: true)) {
-        if (entity is File && entity.path != zipPath) {
-          existingFiles.add(entity.path);
-        }
-      }
-    } catch (_) {}
-
-    extractFileToDisk(zipPath, platformDir.path);
-
-    // Find newly extracted files
-    String? extractedFilePath;
-    try {
-      await for (final entity in platformDir.list(recursive: true)) {
-        if (entity is File &&
-            !entity.path.toLowerCase().endsWith('.zip') &&
-            !existingFiles.contains(entity.path)) {
-          extractedFilePath = entity.path;
-          break;
-        }
-      }
-    } catch (_) {}
-
-    // If we couldn't identify the new file find by matching the zip filename
-    if (extractedFilePath == null) {
-      final zipBaseName = zipPath.split('/').last;
-      final expectedBaseName =
-          zipBaseName.replaceAll(RegExp(r'\.zip$', caseSensitive: false), '');
-
-      await for (final entity in platformDir.list(recursive: true)) {
-        if (entity is File && !entity.path.toLowerCase().endsWith('.zip')) {
-          final fileName = entity.path.split('/').last;
-          final fileNameWithoutExt = fileName.contains('.')
-              ? fileName.substring(0, fileName.lastIndexOf('.'))
-              : fileName;
-          if (fileNameWithoutExt == expectedBaseName) {
-            extractedFilePath = entity.path;
-            break;
-          }
-        }
-      }
-    }
-
-    return extractedFilePath ?? platformDir.path;
   }
 
   Future<List<DownloadTask>> getAllDownloads() => _db.getAllDownloads();

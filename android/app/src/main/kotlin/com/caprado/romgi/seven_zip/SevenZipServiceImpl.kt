@@ -6,7 +6,10 @@ import android.util.Log
 import io.flutter.plugin.common.BinaryMessenger
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
 import org.apache.commons.compress.archivers.sevenz.SevenZFile
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -53,14 +56,115 @@ class SevenZipServiceImpl(
     }
 
     private fun doExtract(archiveFile: File, outputDir: File): String {
+        val name = archiveFile.name.lowercase()
+        return when {
+            name.endsWith(".zip") -> doExtractZip(archiveFile, outputDir)
+            else -> doExtract7z(archiveFile, outputDir)
+        }
+    }
+
+    private fun doExtractZip(archiveFile: File, outputDir: File): String {
         outputDir.mkdirs()
         val archivePath = archiveFile.absolutePath
 
-        // Track existing files so we can identify newly extracted ones.
-        val existingFiles = outputDir.walkTopDown()
-            .filter { it.isFile && it.absolutePath != archivePath }
-            .map { it.absolutePath }
-            .toSet()
+        // First pass: compute total uncompressed size for progress.
+        var totalBytes: Long = 0
+        ZipArchiveInputStream(BufferedInputStream(FileInputStream(archiveFile))).use { zis ->
+            var entry = zis.nextEntry
+            while (entry != null) {
+                if (!entry.isDirectory && entry.size > 0) {
+                    totalBytes += entry.size
+                }
+                entry = zis.nextEntry
+            }
+        }
+
+        Log.i(TAG, "extracting zip $archivePath totalBytes=$totalBytes")
+
+        // Second pass: extract.
+        var bytesExtracted: Long = 0
+        var lastProgressTime = 0L
+        val extractedFiles = mutableListOf<String>()
+
+        ZipArchiveInputStream(BufferedInputStream(FileInputStream(archiveFile))).use { zis ->
+            val buffer = ByteArray(64 * 1024)
+            var entry = zis.nextEntry
+
+            while (entry != null) {
+                if (cancelledPaths.contains(archivePath)) {
+                    throw Exception("Extraction cancelled")
+                }
+
+                val outFile = File(outputDir, entry.name)
+
+                // Guard against zip-slip.
+                if (!outFile.canonicalPath.startsWith(outputDir.canonicalPath + File.separator)) {
+                    entry = zis.nextEntry
+                    continue
+                }
+
+                if (entry.isDirectory) {
+                    outFile.mkdirs()
+                } else {
+                    outFile.parentFile?.mkdirs()
+                    FileOutputStream(outFile).use { fos ->
+                        var len: Int
+                        while (zis.read(buffer).also { len = it } > 0) {
+                            if (cancelledPaths.contains(archivePath)) {
+                                throw Exception("Extraction cancelled")
+                            }
+                            fos.write(buffer, 0, len)
+                            bytesExtracted += len
+
+                            val now = System.currentTimeMillis()
+                            if (now - lastProgressTime >= 200) {
+                                lastProgressTime = now
+                                val progress = ExtractionProgress(
+                                    archivePath = archivePath,
+                                    bytesExtracted = bytesExtracted,
+                                    totalBytes = totalBytes,
+                                )
+                                mainHandler.post {
+                                    events.onProgress(progress) { }
+                                }
+                            }
+                        }
+                    }
+                    extractedFiles.add(outFile.absolutePath)
+                }
+                entry = zis.nextEntry
+            }
+        }
+
+        mainHandler.post {
+            events.onProgress(
+                ExtractionProgress(
+                    archivePath = archivePath,
+                    bytesExtracted = totalBytes,
+                    totalBytes = totalBytes,
+                )
+            ) { }
+        }
+
+        cancelledPaths.remove(archivePath)
+
+        // Prefer the files we just wrote (handles re-extraction where
+        // files already existed before extraction started).
+        val result = when {
+            extractedFiles.size == 1 -> extractedFiles.first()
+            extractedFiles.isNotEmpty() -> {
+                extractedFiles.maxByOrNull { File(it).length() } ?: outputDir.absolutePath
+            }
+            else -> outputDir.absolutePath
+        }
+
+        Log.i(TAG, "zip extraction complete: $result (${extractedFiles.size} files)")
+        return result
+    }
+
+    private fun doExtract7z(archiveFile: File, outputDir: File): String {
+        outputDir.mkdirs()
+        val archivePath = archiveFile.absolutePath
 
         // First pass: compute total uncompressed size for progress.
         var totalBytes: Long = 0
@@ -145,18 +249,17 @@ class SevenZipServiceImpl(
 
         cancelledPaths.remove(archivePath)
 
-        // Identify the newly extracted file.
-        val newFiles = extractedFiles.filter { it !in existingFiles }
+        // Prefer the files we just wrote (handles re-extraction where
+        // files already existed before extraction started).
         val result = when {
-            newFiles.size == 1 -> newFiles.first()
-            newFiles.isNotEmpty() -> {
-                // Return the largest new file (likely the ROM).
-                newFiles.maxByOrNull { File(it).length() } ?: outputDir.absolutePath
+            extractedFiles.size == 1 -> extractedFiles.first()
+            extractedFiles.isNotEmpty() -> {
+                extractedFiles.maxByOrNull { File(it).length() } ?: outputDir.absolutePath
             }
             else -> outputDir.absolutePath
         }
 
-        Log.i(TAG, "extraction complete: $result (${newFiles.size} new files)")
+        Log.i(TAG, "extraction complete: $result (${extractedFiles.size} files)")
         return result
     }
 }
