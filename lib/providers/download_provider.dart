@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../services/services.dart';
+import 'api_provider.dart';
 import 'internet_archive_auth_provider.dart';
 import 'library_provider.dart';
 import 'settings_provider.dart';
@@ -43,6 +44,7 @@ final sevenZipServiceProvider = Provider<SevenZipService>((ref) {
 
 final downloadServiceProvider = Provider<DownloadService>((ref) {
   final db = ref.watch(databaseServiceProvider);
+  final romDb = ref.watch(romDatabaseProvider);
   final storage = ref.watch(storageServiceProvider);
   final notifications = ref.watch(notificationServiceProvider);
   final adapters = ref.watch(hostAdapterRegistryProvider);
@@ -50,6 +52,7 @@ final downloadServiceProvider = Provider<DownloadService>((ref) {
   final sevenZip = ref.watch(sevenZipServiceProvider);
   return DownloadService(
     db: db,
+    romDb: romDb,
     storage: storage,
     notifications: notifications,
     adapters: adapters,
@@ -272,6 +275,9 @@ final downloadProvider = StateNotifierProvider<DownloadNotifier, DownloadState>(
   final settings = ref.watch(settingsProvider);
   service.shouldExtractForPlatform =
       (platform) => settings.shouldExtractForPlatform(platform);
+  service.getLinkResolverPrefs = () => LinkResolverPrefs(
+        torrentsDisabled: settings.torrentsDisabled,
+      );
   final notifier = DownloadNotifier(
     service,
     maxConcurrentDownloads: settings.maxConcurrentDownloads,

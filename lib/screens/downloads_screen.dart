@@ -217,7 +217,9 @@ class _CurrentDownloadTile extends ConsumerWidget {
               children: [
                 Text(
                   task.fetchingMetadata
-                      ? 'Fetching metadata…'
+                      ? task.peers > 0
+                          ? '${task.peers} peer${task.peers == 1 ? '' : 's'} connected'
+                          : 'Contacting trackers…'
                       : task.status == DownloadStatus.extracting
                           ? 'Extracting…'
                           : task.progressText,

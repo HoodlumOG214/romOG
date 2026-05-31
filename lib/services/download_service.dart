@@ -12,7 +12,9 @@ import '../models/models.dart';
 import '../torrent/torrent_api.g.dart';
 import 'database_service.dart';
 import 'host_adapter.dart';
+import 'link_resolver.dart';
 import 'notification_service.dart';
+import 'rom_database_service.dart';
 import 'seven_zip_service.dart';
 import 'storage_service.dart';
 import 'torrent_service.dart';
@@ -21,6 +23,7 @@ enum AddDownloadResult { added, duplicate }
 
 class DownloadService {
   final DatabaseService _db;
+  final RomDatabaseService _romDb;
   final StorageService _storage;
   final NotificationService _notifications;
   final HostAdapterRegistry _adapters;
@@ -48,6 +51,8 @@ class DownloadService {
   final Map<String, DateTime> _downloadStartTime = {};
   final Map<String, int> _downloadStartBytes = {};
   final Map<String, DateTime> _lastDbUpdate = {};
+  final Map<String, Set<String>> _failedUrls = {};
+  LinkResolverPrefs Function() getLinkResolverPrefs = () => const LinkResolverPrefs();
 
   // Max concurrent downloads (0 = unlimited)
   int _maxConcurrentDownloads = 3;
@@ -60,6 +65,7 @@ class DownloadService {
 
   DownloadService({
     required DatabaseService db,
+    required RomDatabaseService romDb,
     required StorageService storage,
     required NotificationService notifications,
     required HostAdapterRegistry adapters,
@@ -67,6 +73,7 @@ class DownloadService {
     required SevenZipService sevenZip,
     Dio? dio,
   })  : _db = db,
+        _romDb = romDb,
         _storage = storage,
         _notifications = notifications,
         _adapters = adapters,
@@ -646,13 +653,16 @@ class DownloadService {
       _processQueue();
       return;
     } catch (error, _) {
-      updatedTask = updatedTask.copyWith(
-        status: DownloadStatus.failed,
-        error: error.toString(),
-      );
-      await _db.updateDownload(updatedTask);
-      _downloadController.add(updatedTask);
-      await _notifications.updateForTask(updatedTask);
+      final failedOver = await _tryFailover(updatedTask);
+      if (!failedOver) {
+        updatedTask = updatedTask.copyWith(
+          status: DownloadStatus.failed,
+          error: error.toString(),
+        );
+        await _db.updateDownload(updatedTask);
+        _downloadController.add(updatedTask);
+        await _notifications.updateForTask(updatedTask);
+      }
     } finally {
       _activeTasks.remove(task.id);
       _activeCancelTokens.remove(task.id);
@@ -917,14 +927,48 @@ class DownloadService {
     _processQueue();
   }
 
-  void _failTorrentTask(DownloadTask task, String error, HostAdapter adapter) {
-    final failed = task.copyWith(status: DownloadStatus.failed, error: error);
+  Future<bool> _tryFailover(DownloadTask task) async {
+    final failed = _failedUrls[task.slug] ??= {};
+    failed.add(task.link.url);
+
+    try {
+      final entry = await _romDb.getEntry(task.slug);
+      if (entry == null) return false;
+
+      final prefs = getLinkResolverPrefs();
+      final resolver = LinkResolver();
+      final ranked = resolver.rank(entry.links, prefs);
+      final next = ranked
+          .where((r) => !failed.contains(r.link.url) && r.score > -100)
+          .firstOrNull;
+      if (next == null) return false;
+
+      final retryTask = task.copyWith(
+        link: next.link,
+        status: DownloadStatus.pending,
+        progress: 0,
+        downloadedBytes: 0,
+        error: null,
+      );
+      await _db.updateDownload(retryTask);
+      _downloadController.add(retryTask);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _failTorrentTask(DownloadTask task, String error, HostAdapter adapter) async {
     _activeTasks.remove(task.id);
     _torrentProgressSubs.remove(task.id)?.cancel();
     _torrentErrorSubs.remove(task.id)?.cancel();
-    _db.updateDownload(failed);
-    _downloadController.add(failed);
-    adapter.onAuthFailure(task.link);
+    final failedOver = await _tryFailover(task);
+    if (!failedOver) {
+      final failed = task.copyWith(status: DownloadStatus.failed, error: error);
+      await _db.updateDownload(failed);
+      _downloadController.add(failed);
+      adapter.onAuthFailure(task.link);
+    }
     _processQueue();
   }
 
@@ -1135,6 +1179,7 @@ class DownloadService {
         // Ignore errors deleting partial file
       }
 
+      _failedUrls.remove(task.slug);
       final updated = task.copyWith(
         status: DownloadStatus.pending,
         progress: 0,

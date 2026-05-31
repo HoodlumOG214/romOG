@@ -55,6 +55,7 @@ class DownloadTask {
   });
 
   DownloadTask copyWith({
+    DownloadLink? link,
     DownloadStatus? status,
     double? progress,
     int? downloadedBytes,
@@ -74,7 +75,7 @@ class DownloadTask {
       title: title,
       platform: platform,
       boxartUrl: boxartUrl,
-      link: link,
+      link: link ?? this.link,
       status: status ?? this.status,
       progress: progress ?? this.progress,
       downloadedBytes: downloadedBytes ?? this.downloadedBytes,
@@ -166,6 +167,8 @@ class DownloadTask {
       case DownloadStatus.pending:
         return 'Waiting...';
       case DownloadStatus.downloading:
+        if (link.isTorrent && fetchingMetadata) return 'Finding peers...';
+        if (link.isTorrent) return 'Downloading (Torrent)';
         return 'Downloading...';
       case DownloadStatus.paused:
         return 'Paused';
