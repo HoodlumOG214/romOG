@@ -19,7 +19,7 @@ Concept inspired by [pkgi-psp](https://github.com/bucanero/pkgi-psp), [Kekatsu-D
 - **HTTP + Torrent transports** - Direct HTTP downloads and BitTorrent (selective per-file) in the same queue
 - **Background Downloads** - Downloads continue when the app is in the background
 - **Pause & Resume** - Resume downloads after app restart, including torrents
-- **ZIP Extraction** - Automatic extraction of downloaded archives
+- **Archive Extraction** - Automatic extraction of downloaded ZIP and 7z archives, configurable per-platform
 - **Library Management** - Track all your downloaded ROMs in one place
 - **Custom Download Paths** - Set default or per-platform download locations
 - **Internet Archive Support** - Persistent login for protected Internet Archive items
@@ -86,7 +86,8 @@ Some catalogs (notably MiNERVA) distribute ROMs as BitTorrent torrents — often
 
 - The download queue treats torrent links the same as HTTP links — pick a ROM, tap **Download**.
 - Only the file you ask for is downloaded from the torrent (selective download via libtorrent file priorities). You don't grab the whole pack.
-- **Settings > Downloads > Seed torrents** controls whether romgi continues sharing back to peers while a download is active. On by default; turn it off if you have a metered connection.
+- romgi does not seed. Once your file is downloaded, the torrent is removed and no upload occurs.
+- Torrents can be disabled entirely in **Settings > Downloads > Disable Torrents** if you prefer direct downloads only.
 
 ## Supported Platforms
 
@@ -101,7 +102,7 @@ romgi supports a wide range of retro gaming platforms, including:
 
 ### Requirements
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.0 or higher)
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.10 or higher)
 - Android SDK with API level 24+ (Android 7.0+)
 - Git
 
@@ -149,12 +150,12 @@ Output is `db/romdb.db`. Adding a new source = drop a folder under `db/sources/<
 | `sqflite`                     | Local SQLite (downloads, library)       |
 | `flutter_riverpod`            | State management                        |
 | `cached_network_image`        | Box art caching                         |
-| `archive`                     | ZIP extraction                          |
+| `commons-compress` (Android)  | ZIP and 7z extraction via Pigeon bridge |
 | `flutter_local_notifications` | Download notifications                  |
 | `flutter_foreground_task`     | Background HTTP + torrent downloads     |
 | `flutter_secure_storage`      | Encrypted IA session storage            |
 | `webview_flutter`             | IA login flow                           |
-| `pigeon`                      | Type-safe Dart ↔ Kotlin torrent bridge  |
+| `pigeon`                      | Type-safe Dart ↔ Kotlin bridge (torrent + extraction) |
 | `libtorrent4j` (Android)      | BitTorrent runtime with file priorities |
 
 ## Disclaimer

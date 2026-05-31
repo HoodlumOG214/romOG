@@ -30,8 +30,6 @@ dependencies:
   # Storage paths
   path_provider: ^2.1.2
 
-  # ZIP extraction
-  archive: ^3.6.1
 
   # Permissions handling
   permission_handler: ^11.3.0

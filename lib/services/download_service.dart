@@ -26,7 +26,7 @@ class DownloadService {
   final HostAdapterRegistry _adapters;
   final TorrentService _torrents;
   final SevenZipService _sevenZip;
-  bool autoExtractDisabled = false;
+  bool Function(String platform) shouldExtractForPlatform = (_) => true;
   final Dio _dio;
   Dio? _nativeDio;
   final _uuid = const Uuid();
@@ -515,7 +515,7 @@ class DownloadService {
         }
       }
 
-      if (_shouldExtract(task.link.filename)) {
+      if (_shouldExtract(task.link.filename, task.platform)) {
         updatedTask = updatedTask.copyWith(status: DownloadStatus.extracting);
         _activeTasks[task.id] = updatedTask;
         await _db.updateDownload(updatedTask);
@@ -707,7 +707,7 @@ class DownloadService {
 
     // Also check for an already-extracted file (archive was deleted after
     // extraction in a previous session).
-    if (!alreadyComplete && _shouldExtract(task.link.filename)) {
+    if (!alreadyComplete && _shouldExtract(task.link.filename, task.platform)) {
       final platformDir = await _storage.getPlatformDirectory(task.platform);
       final baseName = task.link.filename
           .replaceAll(RegExp(r'\.(zip|7z)$', caseSensitive: false), '');
@@ -727,7 +727,7 @@ class DownloadService {
 
     if (alreadyComplete) {
       var finalPath = existingPath;
-      if (existingPath == destPath && _shouldExtract(task.link.filename)) {
+      if (existingPath == destPath && _shouldExtract(task.link.filename, task.platform)) {
         try {
           finalPath = await _extractArchive(destPath, task.platform);
           await File(destPath).delete();
@@ -860,7 +860,7 @@ class DownloadService {
 
     var finalPath = dest;
 
-    if (_shouldExtract(task.link.filename)) {
+    if (_shouldExtract(task.link.filename, task.platform)) {
       final extracting = task.copyWith(status: DownloadStatus.extracting);
       _downloadController.add(extracting);
       await _db.updateDownload(extracting);
@@ -1148,8 +1148,8 @@ class DownloadService {
     }
   }
 
-  bool _shouldExtract(String filename) {
-    if (autoExtractDisabled) return false;
+  bool _shouldExtract(String filename, String platform) {
+    if (!shouldExtractForPlatform(platform)) return false;
     final lower = filename.toLowerCase();
     return lower.endsWith('.zip') || lower.endsWith('.7z');
   }

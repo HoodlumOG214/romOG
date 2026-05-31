@@ -304,8 +304,8 @@ class _EntryDetailContentState extends ConsumerState<_EntryDetailContent> {
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    '${_rankLinks(
+                  ...() {
+                    final ranked = _rankLinks(
                       entry.links,
                       iaLoggedIn: ref.watch(iaLoggedInProvider).maybeWhen(
                             data: (loggedIn) => loggedIn,
@@ -313,69 +313,76 @@ class _EntryDetailContentState extends ConsumerState<_EntryDetailContent> {
                           ),
                       torrentsDisabled:
                           ref.watch(settingsProvider).torrentsDisabled,
-                    ).length} available',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                    );
+                    return [
+                      Text(
+                        '${ranked.length} available',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ];
+                  }(),
                 ],
               ),
               const SizedBox(height: 12),
 
               // Download links
-              if (entry.links.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.cloud_off,
-                          size: 48,
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text('No download links available'),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                ...() {
-                  final ranked = _rankLinks(
-                    entry.links,
-                    iaLoggedIn: ref.watch(iaLoggedInProvider).maybeWhen(
-                          data: (loggedIn) => loggedIn,
-                          orElse: () => false,
-                        ),
-                    torrentsDisabled:
-                        ref.watch(settingsProvider).torrentsDisabled,
-                  );
-                  if (ranked.isEmpty) {
-                    return [
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.block,
-                                size: 48,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'All download links are torrents.\nEnable torrents in Settings to download.',
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
+              ...() {
+                final ranked = _rankLinks(
+                  entry.links,
+                  iaLoggedIn: ref.watch(iaLoggedInProvider).maybeWhen(
+                        data: (loggedIn) => loggedIn,
+                        orElse: () => false,
+                      ),
+                  torrentsDisabled:
+                      ref.watch(settingsProvider).torrentsDisabled,
+                );
+                if (ranked.isEmpty && entry.links.isEmpty) {
+                  return [
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.cloud_off,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text('No download links available'),
+                          ],
                         ),
                       ),
-                    ];
-                  }
-                  return ranked
-                      .map((link) => _DownloadLinkCard(entry: entry, link: link))
-                      .toList();
-                }(),
+                    ),
+                  ];
+                }
+                if (ranked.isEmpty) {
+                  return [
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.block,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'All download links are torrents.\nEnable torrents in Settings to download.',
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ];
+                }
+                return ranked
+                    .map((link) => _DownloadLinkCard(entry: entry, link: link))
+                    .toList();
+              }(),
 
               const SizedBox(height: 32),
             ]),

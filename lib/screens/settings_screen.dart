@@ -175,18 +175,58 @@ class SettingsScreen extends ConsumerWidget {
                     return Column(
                       children: sorted.map((platform) {
                         final customPath = settings.platformPaths[platform.id];
+                        final extractEnabled =
+                            settings.shouldExtractForPlatform(platform.id);
                         return ListTile(
                           leading: const Icon(Icons.folder_outlined),
                           title: Text(
                             PlatformNames.getDisplayName(platform.id),
                           ),
-                          subtitle: customPath != null
-                              ? Text(
-                                  customPath,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              : const Text('Using default'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                customPath ?? 'Using default',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    height: 24,
+                                    width: 36,
+                                    child: FittedBox(
+                                      child: Switch(
+                                        value: extractEnabled,
+                                        onChanged: settings.autoExtractDisabled
+                                            ? null
+                                            : (value) {
+                                                ref
+                                                    .read(settingsProvider
+                                                        .notifier)
+                                                    .setPlatformExtractDisabled(
+                                                        platform.id, !value);
+                                              },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Auto-extract',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: settings.autoExtractDisabled
+                                              ? Colors.grey
+                                              : null,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                           trailing: customPath != null
                               ? IconButton(
                                   icon: const Icon(Icons.clear),
@@ -198,6 +238,7 @@ class SettingsScreen extends ConsumerWidget {
                                   },
                                 )
                               : const Icon(Icons.chevron_right),
+                          isThreeLine: true,
                           onTap: () => _pickFolder(
                             context,
                             ref,

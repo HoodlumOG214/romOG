@@ -13,6 +13,7 @@ class SettingsState {
   final int maxConcurrentDownloads;
   final bool torrentsDisabled;
   final bool autoExtractDisabled;
+  final Set<String> extractDisabledPlatforms;
   final bool isLoading;
 
   const SettingsState({
@@ -24,8 +25,14 @@ class SettingsState {
     this.maxConcurrentDownloads = 3,
     this.torrentsDisabled = false,
     this.autoExtractDisabled = false,
+    this.extractDisabledPlatforms = const {},
     this.isLoading = false,
   });
+
+  bool shouldExtractForPlatform(String platform) {
+    if (autoExtractDisabled) return false;
+    return !extractDisabledPlatforms.contains(platform);
+  }
 
   SettingsState copyWith({
     String? defaultDownloadPath,
@@ -37,6 +44,7 @@ class SettingsState {
     int? maxConcurrentDownloads,
     bool? torrentsDisabled,
     bool? autoExtractDisabled,
+    Set<String>? extractDisabledPlatforms,
     bool? isLoading,
   }) {
     return SettingsState(
@@ -51,6 +59,8 @@ class SettingsState {
           maxConcurrentDownloads ?? this.maxConcurrentDownloads,
       torrentsDisabled: torrentsDisabled ?? this.torrentsDisabled,
       autoExtractDisabled: autoExtractDisabled ?? this.autoExtractDisabled,
+      extractDisabledPlatforms:
+          extractDisabledPlatforms ?? this.extractDisabledPlatforms,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -80,6 +90,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   static const String _keyMaxConcurrentDownloads = 'max_concurrent_downloads';
   static const String _keyTorrentsDisabled = 'torrents_disabled';
   static const String _keyAutoExtractDisabled = 'auto_extract_disabled';
+  static const String _keyExtractDisabledPlatforms =
+      'extract_disabled_platform_';
 
   SettingsNotifier() : super(const SettingsState()) {
     _loadSettings();
@@ -110,15 +122,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
     // Load platform-specific paths
     final platformPaths = <String, String>{};
-    final keys = prefs.getKeys().where(
-      (key) => key.startsWith(_keyPlatformPaths),
-    );
-
-    for (final key in keys) {
-      final platform = key.replaceFirst(_keyPlatformPaths, '');
-      final path = prefs.getString(key);
-      if (path != null) {
-        platformPaths[platform] = path;
+    final extractDisabledPlatforms = <String>{};
+    for (final key in prefs.getKeys()) {
+      if (key.startsWith(_keyPlatformPaths)) {
+        final platform = key.replaceFirst(_keyPlatformPaths, '');
+        final path = prefs.getString(key);
+        if (path != null) platformPaths[platform] = path;
+      } else if (key.startsWith(_keyExtractDisabledPlatforms)) {
+        final platform = key.replaceFirst(_keyExtractDisabledPlatforms, '');
+        if (prefs.getBool(key) == true) extractDisabledPlatforms.add(platform);
       }
     }
 
@@ -131,6 +143,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       maxConcurrentDownloads: maxConcurrentDownloads,
       torrentsDisabled: torrentsDisabled,
       autoExtractDisabled: autoExtractDisabled,
+      extractDisabledPlatforms: extractDisabledPlatforms,
       isLoading: false,
     );
   }
@@ -182,6 +195,20 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(defaultRegions: regions);
   }
 
+  Future<void> setPlatformExtractDisabled(String platform, bool disabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = '$_keyExtractDisabledPlatforms$platform';
+    final updated = Set<String>.from(state.extractDisabledPlatforms);
+    if (disabled) {
+      await prefs.setBool(key, true);
+      updated.add(platform);
+    } else {
+      await prefs.remove(key);
+      updated.remove(platform);
+    }
+    state = state.copyWith(extractDisabledPlatforms: updated);
+  }
+
   Future<void> setAutoExtractDisabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyAutoExtractDisabled, value);
@@ -211,12 +238,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await prefs.remove(_keyTorrentsDisabled);
     await prefs.remove(_keyAutoExtractDisabled);
 
-    final keys = prefs.getKeys().where(
-      (key) => key.startsWith(_keyPlatformPaths),
-    );
-
-    for (final key in keys) {
-      await prefs.remove(key);
+    for (final key in prefs.getKeys().toList()) {
+      if (key.startsWith(_keyPlatformPaths) ||
+          key.startsWith(_keyExtractDisabledPlatforms)) {
+        await prefs.remove(key);
+      }
     }
 
     state = const SettingsState();

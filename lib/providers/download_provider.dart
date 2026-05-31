@@ -269,10 +269,9 @@ final downloadProvider = StateNotifierProvider<DownloadNotifier, DownloadState>(
   ref,
 ) {
   final service = ref.watch(downloadServiceProvider);
-  service.autoExtractDisabled =
-      ref.watch(settingsProvider).autoExtractDisabled;
-  // Use read instead of watch to avoid recreating the notifier when settings change
-  final settings = ref.read(settingsProvider);
+  final settings = ref.watch(settingsProvider);
+  service.shouldExtractForPlatform =
+      (platform) => settings.shouldExtractForPlatform(platform);
   final notifier = DownloadNotifier(
     service,
     maxConcurrentDownloads: settings.maxConcurrentDownloads,

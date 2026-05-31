@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -273,7 +272,7 @@ class RomDatabaseService {
 
       final gzFile = File(tempGzPath);
       final gzBytes = await gzFile.readAsBytes();
-      final decompressed = GZipDecoder().decodeBytes(gzBytes);
+      final decompressed = gzip.decode(gzBytes);
 
       final dbFile = File(dbPath);
       await dbFile.writeAsBytes(decompressed);
