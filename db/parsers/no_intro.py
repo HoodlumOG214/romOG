@@ -1,9 +1,10 @@
 """
-This module provides utilities for parsing and processing game titles, 
-primarily following the No-Intro naming convention. It includes functions 
+This module provides utilities for parsing and processing game titles,
+primarily following the No-Intro naming convention. It includes functions
 to extract regions, clean up titles, and normalize their structure.
 """
 import re
+from typing import Any
 from utils.parse_utils import normalize_repeated_chars
 
 # Mapping of regions to their respective database region
@@ -71,7 +72,7 @@ WORD_ARTICLES = [
 ]
 
 
-def parse_regions(title):
+def parse_regions(title: str) -> list[str]:
     """Parse the regions from a title."""
     # Extract all groups of parentheses from the title
     matches = re.findall(r"\((.*?)\)", title)
@@ -93,7 +94,7 @@ def parse_regions(title):
     return regions
 
 
-def remove_groups_with_contents(title, contents_to_remove):
+def remove_groups_with_contents(title: str, contents_to_remove: list[str]) -> str:
     """Remove parentheses groups containing specific contents."""
 
     # Construct a regex pattern to match parentheses groups containing any of the specified contents
@@ -103,7 +104,7 @@ def remove_groups_with_contents(title, contents_to_remove):
     return re.sub(pattern, '', title)
 
 
-def move_article(title):
+def move_article(title: str) -> str:
     """Move the article in a title to the beginning."""
     # Match the title structure: main name, article, and optional extra info
     match = re.match(r"^(.*?),\s*(\S+)(?:\s+(.*))?$", title)
@@ -131,7 +132,7 @@ def move_article(title):
     return title
 
 
-def get_clean_title(title):
+def get_clean_title(title: str) -> str:
     """Clean the title by removing unnecessary groups and normalizing it."""
     clean_title = title
 
@@ -161,7 +162,7 @@ def get_clean_title(title):
     return clean_title
 
 
-def process_entry(entry, parse_title_regions, clean_title_contents, move_title_article):
+def process_entry(entry: dict[str, Any], parse_title_regions: bool, clean_title_contents: bool, move_title_article: bool) -> None:
     """Process a single entry by applying various transformations."""
     if parse_title_regions:
         if not entry.get('regions'):
@@ -174,7 +175,7 @@ def process_entry(entry, parse_title_regions, clean_title_contents, move_title_a
         entry['title'] = move_article(entry['title'])
 
 
-def parse(entries, flags):
+def parse(entries: list[dict[str, Any]], flags: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse a list of entries and process each one."""
     parse_title_regions = flags.get('parse_title_regions', True)
     clean_title_contents = flags.get('clean_title_contents', True)

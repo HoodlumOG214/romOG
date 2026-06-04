@@ -12,7 +12,8 @@ from utils import cache_manager
 from utils.scrape_utils import fetch_url, create_scraper_session
 from utils.parse_utils import size_str_to_bytes, join_urls
 
-from core.contract import BuildContext, PlatformConfig, Source, SourceManifest
+from typing import Any, Generator
+from core.contract import BuildContext, PlatformConfig, SourceManifest
 
 
 HOST_NAME = 'MarioCube'
@@ -24,7 +25,7 @@ CURL_HEADERS = {
 }
 
 
-def extract_entries(response, source, platform, base_url):
+def extract_entries(response: str, source: dict[str, Any], platform: str, base_url: str) -> list[dict[str, Any]]:
     """Extract entries from the ANSI-colored directory listing response."""
     entries = []
 
@@ -41,7 +42,7 @@ def extract_entries(response, source, platform, base_url):
     return entries
 
 
-def create_entry(link, filename, title, size_str, source, platform, base_url):
+def create_entry(link: str, filename: str, title: str, size_str: str, source: dict[str, Any], platform: str, base_url: str) -> dict[str, Any]:
     """Create a dictionary representing a single entry."""
     name = html.unescape(title)
     size = size_str_to_bytes(size_str)
@@ -67,7 +68,7 @@ def create_entry(link, filename, title, size_str, source, platform, base_url):
     }
 
 
-def parse_listing_lines(response):
+def parse_listing_lines(response: str) -> Generator[tuple[str, str], None, None]:
     """Yield filename and size pairs from the raw listing response."""
     for raw_line in response.splitlines():
         line = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]').sub('', raw_line).strip()
@@ -82,7 +83,7 @@ def parse_listing_lines(response):
         yield filename, size_str
 
 
-def fetch_response(url, use_cached, session=None):
+def fetch_response(url: str, use_cached: bool, session: Any = None) -> str | None:
     """Fetch the response from a URL, optionally using a cached version."""
     url_stripped = url.rstrip('/')
     short_url = url_stripped.split('/')[-1][:50] if '/' in url_stripped else url_stripped[:50]
@@ -97,7 +98,7 @@ def fetch_response(url, use_cached, session=None):
     return fetch_url(url, session=session)
 
 
-def scrape(source, platform, use_cached=False):
+def scrape(source: dict[str, Any], platform: str, use_cached: bool = False) -> list[dict[str, Any]]:
     """Scrape entries from MarioCube based on the source configuration."""
     entries = []
     session = create_scraper_session(CURL_HEADERS)
@@ -131,7 +132,7 @@ class MarioCubeSource:
         platform: str,
         config: PlatformConfig,
         ctx: BuildContext,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         return scrape(config.to_legacy_dict(), platform, ctx.use_cached)
 
 

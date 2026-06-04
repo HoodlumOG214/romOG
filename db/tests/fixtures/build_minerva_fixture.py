@@ -74,7 +74,7 @@ ROWS = [
         f"{RANDOM_PREFIX}readme.txt",
         "readme.txt",
         100,
-        f"magnet:?xt=urn:btih:cccccccccccccccccccccccccccccccccccccccc",
+        "magnet:?xt=urn:btih:cccccccccccccccccccccccccccccccccccccccc",
         "0",
         "misc.torrent",
     ),

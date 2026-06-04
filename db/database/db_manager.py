@@ -8,6 +8,7 @@ import json
 import os
 import sqlite3
 import time
+from typing import Any
 
 from utils.parse_utils import create_slug, create_search_key
 
@@ -20,8 +21,8 @@ DB_OLD_NAME = 'romdb_old.db'
 # Mirror of: lib/services/rom_database_service.dart `kAppExpectedSchemaVersion`.
 SCHEMA_VERSION = 2
 
-con = None
-cur = None
+con: sqlite3.Connection | None = None
+cur: sqlite3.Cursor | None = None
 
 PLATFORMS = {
     'nes': {'brand': 'Nintendo', 'name': 'Nintendo Entertainment System'},
@@ -84,7 +85,7 @@ REGIONS = {
 }
 
 
-def init_database():
+def init_database() -> None:
     """Initialize the database: create tables, indexes, seed static data."""
     global con, cur
 
@@ -230,8 +231,9 @@ def init_database():
         cur.execute('INSERT INTO regions (id, name) VALUES (?, ?)', (id, name))
 
 
-def register_source(manifest) -> None:
+def register_source(manifest: Any) -> None:
     """Insert a source row from a SourceManifest. Called once per source."""
+    assert cur is not None
     cur.execute(
         'INSERT INTO sources '
         '(id, name, homepage, kind, auth_required, priority, manifest_json) '
@@ -262,6 +264,7 @@ def register_torrent(
     added_at: int | None = None,
 ) -> None:
     """Insert a torrent row idempotently (no-op if infohash already present)."""
+    assert cur is not None
     ts = added_at if added_at is not None else int(time.time())
     cur.execute(
         'INSERT OR IGNORE INTO torrents '
@@ -293,6 +296,7 @@ def record_source_health(
     last_checked: int | None = None,
 ) -> None:
     """Upsert a source_health row."""
+    assert cur is not None
     ts = last_checked if last_checked is not None else int(time.time())
     cur.execute(
         'INSERT OR REPLACE INTO source_health '
@@ -302,8 +306,9 @@ def record_source_health(
     )
 
 
-def insert_entry(entry: dict):
+def insert_entry(entry: dict[str, Any]) -> None:
     """Insert a new entry into the database or update it if it exists."""
+    assert cur is not None
     entry['slug'] = create_slug(entry)
     entry['search_key'] = create_search_key(entry['title'])
 
@@ -358,12 +363,13 @@ def insert_entry(entry: dict):
             _insert_link(entry['slug'], link, ignore_duplicates=False)
 
 
-def _insert_link(entry_slug: str, link: dict, *, ignore_duplicates: bool) -> None:
+def _insert_link(entry_slug: str, link: dict[str, Any], *, ignore_duplicates: bool) -> None:
     """Insert one link row.
 
     If `_torrent_meta` is set on the link, the corresponding torrents
     row is upserted first so scrapers don't have to call register_torrent.
     """
+    assert cur is not None
     meta = link.get('_torrent_meta')
     if meta is not None:
         register_torrent(**meta)
@@ -396,8 +402,10 @@ def _insert_link(entry_slug: str, link: dict, *, ignore_duplicates: bool) -> Non
     ))
 
 
-def close_database():
+def close_database() -> None:
     """Close the database connection and finalize changes."""
+    assert con is not None
+    assert cur is not None
     con.commit()
 
     cur.close()

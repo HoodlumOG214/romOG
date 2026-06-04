@@ -6,16 +6,18 @@ Scrapes the NoPayStation TSV database for PS3/PSV titles. Generates RAP
 catalog DB on the GitHub raw mirror.
 """
 import os
-import requests
 import csv
 import io
 import xml.etree.ElementTree as ET
+from typing import Any
+
+import requests
 
 from utils import cache_manager
 from utils.scrape_utils import fetch_url
 from utils.parse_utils import size_bytes_to_str, join_urls
 
-from core.contract import BuildContext, PlatformConfig, Source, SourceManifest
+from core.contract import BuildContext, PlatformConfig, SourceManifest
 
 
 HOST_NAME = 'NoPayStation'
@@ -37,19 +39,19 @@ PSV_ZRIFS_DIR = 'static/content/psv/zrifs'
 PSV_ZRIFS_BASE_URL = f'{MAIN_SITE}/static/content/psv/zrifs'
 
 
-def create_rap_file(rap, filepath):
+def create_rap_file(rap: str, filepath: str) -> None:
     """Create a RAP file from a hex string."""
     with open(filepath, 'wb') as f:
         f.write(bytes.fromhex(rap))
 
 
-def create_zrif_file(zrif, filepath):
+def create_zrif_file(zrif: str, filepath: str) -> None:
     """Create a ZRIF file from a string."""
     with open(filepath, 'w') as f:
         f.write(zrif)
 
 
-def add_ps3_links(result, links, base_url):
+def add_ps3_links(result: dict[str, Any], links: list[dict[str, Any]], base_url: str) -> None:
     """Add PS3-specific links (e.g., RAP files) to the links list."""
     name = result['Name']
     rap = result['RAP']
@@ -73,7 +75,7 @@ def add_ps3_links(result, links, base_url):
         })
 
 
-def add_psv_links(result, links, base_url):
+def add_psv_links(result: dict[str, Any], links: list[dict[str, Any]], base_url: str) -> None:
     """Add PSV-specific links (e.g., ZRIF strings) to the links list."""
     name = result['Name']
     zrif = result['zRIF']
@@ -97,7 +99,7 @@ def add_psv_links(result, links, base_url):
         })
 
 
-def parse_links(result, source, platform, base_url):
+def parse_links(result: dict[str, Any], source: dict[str, Any], platform: str, base_url: str) -> list[dict[str, Any]]:
     """Parse links from the result and generate metadata for each link."""
     links = []
     url = result['PKG direct link']
@@ -106,8 +108,9 @@ def parse_links(result, source, platform, base_url):
 
     name = result['Name']
     filename = url.rstrip('/').split('/')[-1]
-    size = round(float(result['File Size'])) if result['File Size'].isdigit() else 0
-    size_str = size_bytes_to_str(size) if size else 0
+    file_size_val = result.get('File Size', '')
+    size = round(float(file_size_val)) if file_size_val and file_size_val.isdigit() else 0
+    size_str = size_bytes_to_str(size) if size else '0B'
 
     if url.endswith('.xml'):
         # Handle XML files containing multiple URLs
@@ -152,7 +155,7 @@ def parse_links(result, source, platform, base_url):
     return links
 
 
-def create_entry(result, source, platform, base_url):
+def create_entry(result: dict[str, Any], source: dict[str, Any], platform: str, base_url: str) -> dict[str, Any]:
     """Create an entry for a ROM based on the result data."""
     rom_id = result['Title ID']
     name = result['Name']
@@ -168,7 +171,7 @@ def create_entry(result, source, platform, base_url):
     }
 
 
-def parse_response(response, source, platform, base_url):
+def parse_response(response: str, source: dict[str, Any], platform: str, base_url: str) -> list[dict[str, Any]]:
     """Parse the response and extract entries."""
     entries = []
     results = csv.DictReader(io.StringIO(response), delimiter='\t')
@@ -181,7 +184,7 @@ def parse_response(response, source, platform, base_url):
     return entries
 
 
-def fetch_response(url, use_cached):
+def fetch_response(url: str, use_cached: bool) -> str | None:
     """Fetch the response from a URL, optionally using a cached version."""
     short_url = url.split('/')[-1][:50] if '/' in url else url[:50]
 
@@ -194,7 +197,7 @@ def fetch_response(url, use_cached):
     return fetch_url(url)
 
 
-def scrape(source, platform, use_cached=False):
+def scrape(source: dict[str, Any], platform: str, use_cached: bool = False) -> list[dict[str, Any]]:
     """Scrape data from the source and extract entries."""
     # Ensure directories exist
     for path in (PS3_RAPS_DIR, PSV_ZRIFS_DIR):
@@ -229,7 +232,7 @@ class NoPayStationSource:
         platform: str,
         config: PlatformConfig,
         ctx: BuildContext,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         return scrape(config.to_legacy_dict(), platform, ctx.use_cached)
 
 

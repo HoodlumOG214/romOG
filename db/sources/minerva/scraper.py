@@ -20,6 +20,7 @@ import sqlite3
 import urllib.parse
 from pathlib import Path
 
+from typing import Any
 from core.contract import BuildContext, PlatformConfig, SourceManifest
 
 
@@ -130,7 +131,7 @@ def scrape_with_artefacts(
     *,
     index: list[str],
     db: sqlite3.Connection,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Pure function over pre-loaded artefacts. Tests use this directly."""
     if not config.urls:
         return []
@@ -146,7 +147,7 @@ def scrape_with_artefacts(
             return []
 
     metadata = _query_metadata(db, paths)
-    entries: list[dict] = []
+    entries: list[dict[str, Any]] = []
 
     for full_path in paths:
         meta = metadata.get(full_path)
@@ -198,7 +199,7 @@ def scrape_with_artefacts(
                         'source_id': 'minerva',
                         'name': torrent_filename,
                         'magnet': full_magnet,
-                        'trackers': _extract_trackers(full_magnet),
+                        'trackers': _extract_trackers(full_magnet or ''),
                     },
                 }
             ],
@@ -269,9 +270,10 @@ class MinervaSource:
         platform: str,
         config: PlatformConfig,
         ctx: BuildContext,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         if not self._ensure_artefacts():
             return []
+        assert self._index is not None and self._db is not None
         try:
             return scrape_with_artefacts(
                 config, platform, index=self._index, db=self._db,

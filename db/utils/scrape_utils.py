@@ -2,6 +2,8 @@
 This module provides utilities for scraping web content and caching responses.
 """
 import time
+from typing import Any
+
 import cloudscraper
 from playwright.sync_api import sync_playwright
 
@@ -19,7 +21,7 @@ BROWSER_HEADERS = {
 }
 
 # Sites that require Playwright (real browser) due to TLS fingerprinting
-PLAYWRIGHT_REQUIRED_HOSTS = ['myrient.erista.me']
+PLAYWRIGHT_REQUIRED_HOSTS = ['repo.mariocube.com']
 
 # Rate limiting settings
 MAX_RETRIES = 5
@@ -52,12 +54,12 @@ def close_browser():
         _playwright = None
 
 
-def _needs_playwright(url):
+def _needs_playwright(url: str) -> bool:
     """Check if a URL requires Playwright for TLS fingerprinting bypass."""
     return any(host in url for host in PLAYWRIGHT_REQUIRED_HOSTS)
 
 
-def _rate_limit():
+def _rate_limit() -> None:
     """Enforce rate limiting between requests."""
     global _last_request_time
     elapsed = time.time() - _last_request_time
@@ -66,7 +68,7 @@ def _rate_limit():
     _last_request_time = time.time()
 
 
-def _fetch_with_playwright(url):
+def _fetch_with_playwright(url: str) -> str | None:
     """Fetch URL using Playwright (real browser) with retry logic."""
     browser = _get_browser()
 
@@ -99,7 +101,7 @@ def _fetch_with_playwright(url):
     return None
 
 
-def create_scraper_session(headers=None):
+def create_scraper_session(headers: dict[str, str] | None = None) -> Any:
     """Create a scraper session and optionally apply custom headers."""
     session = cloudscraper.create_scraper(
         browser={
@@ -114,7 +116,7 @@ def create_scraper_session(headers=None):
     return session
 
 
-def fetch_url(url, session=None):
+def fetch_url(url: str, session: Any = None) -> str | None:
     """Fetch the content of a URL and cache the response."""
     # Get short URL for display (handle trailing slashes)
     url_stripped = url.rstrip('/')

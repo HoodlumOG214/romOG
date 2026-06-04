@@ -14,10 +14,8 @@ Run: python -m pytest tests
 from __future__ import annotations
 
 import json
-import os
 import sqlite3
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -61,6 +59,7 @@ def test_init_creates_v2_tables(fresh_db):
         "sources", "source_health", "user_sources", "torrents",
     }
     cur = db_manager.cur
+    assert cur is not None
     rows = cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
     actual = {r[0] for r in rows}
     missing = expected - actual
@@ -69,6 +68,7 @@ def test_init_creates_v2_tables(fresh_db):
 
 def test_links_table_has_v2_columns(fresh_db):
     cur = db_manager.cur
+    assert cur is not None
     cols = [r[1] for r in cur.execute("PRAGMA table_info(links)").fetchall()]
     for required in (
         "source_id", "requires_auth",
@@ -83,6 +83,7 @@ def test_register_source_persists_manifest(fresh_db):
         db_manager.register_source(manifest)
 
     cur = db_manager.cur
+    assert cur is not None
     rows = cur.execute(
         "SELECT id, name, kind, auth_required, priority, manifest_json "
         "FROM sources ORDER BY id"
@@ -110,6 +111,7 @@ def test_record_source_health_upserts(fresh_db):
         "minerva", "ok", entry_count=5, link_count=10, last_checked=1000
     )
     cur = db_manager.cur
+    assert cur is not None
     row = cur.execute(
         "SELECT status, entry_count, link_count, last_checked "
         "FROM source_health WHERE source_id='minerva'"
@@ -168,6 +170,7 @@ def test_insert_entry_writes_v2_link_columns(fresh_db):
     db_manager.insert_entry(entry)
 
     cur = db_manager.cur
+    assert cur is not None
     rows = cur.execute(
         "SELECT source_id, requires_auth, torrent_infohash "
         "FROM links ORDER BY source_id"
@@ -181,6 +184,7 @@ def test_insert_entry_writes_v2_link_columns(fresh_db):
 def test_tag_links_defaults_to_manifest_id():
     registry = load_registry(DB_ROOT)
     source = registry.get("minerva")
+    assert source is not None
 
     entries = [
         {"links": [{"name": "a"}, {"name": "b"}]},
@@ -197,6 +201,7 @@ def test_tag_links_defaults_to_manifest_id():
 def test_tag_links_respects_per_link_override():
     registry = load_registry(DB_ROOT)
     source = registry.get("internet_archive")
+    assert source is not None
 
     entries = [{
         "links": [
@@ -216,11 +221,13 @@ def test_user_sources_table_is_empty_after_build(fresh_db):
     for manifest in registry.manifests.values():
         db_manager.register_source(manifest)
     cur = db_manager.cur
+    assert cur is not None
     count = cur.execute("SELECT COUNT(*) FROM user_sources").fetchone()[0]
     assert count == 0, "user_sources is reserved; build pipeline must not write to it"
 
 
 def test_torrents_table_starts_empty(fresh_db):
     cur = db_manager.cur
+    assert cur is not None
     count = cur.execute("SELECT COUNT(*) FROM torrents").fetchone()[0]
     assert count == 0

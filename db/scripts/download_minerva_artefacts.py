@@ -7,6 +7,7 @@ partial 1.7 GB hashes.db can be picked up without restarting.
 """
 from __future__ import annotations
 
+import http.client
 import os
 import sys
 import time
@@ -149,7 +150,7 @@ def _stream_download(url: str, part_path: Path, *, start: int, total: int) -> No
             sys.stdout.flush()
 
 
-def _request(url: str, *, method: str = 'GET') -> urllib.request.addinfourl:
+def _request(url: str, *, method: str = 'GET') -> http.client.HTTPResponse:
     req = urllib.request.Request(
         url, headers={'User-Agent': _USER_AGENT}, method=method,
     )
@@ -159,11 +160,12 @@ def _request(url: str, *, method: str = 'GET') -> urllib.request.addinfourl:
 def _humanize(n: int) -> str:
     if n <= 0:
         return '0 B'
+    size = float(n)
     for unit in ('B', 'KB', 'MB', 'GB', 'TB'):
-        if n < 1024:
-            return f'{n:.1f} {unit}' if unit != 'B' else f'{n:.0f} {unit}'
-        n /= 1024
-    return f'{n:.1f} PB'
+        if size < 1024:
+            return f'{size:.1f} {unit}' if unit != 'B' else f'{size:.0f} {unit}'
+        size /= 1024
+    return f'{size:.1f} PB'
 
 
 if __name__ == '__main__':

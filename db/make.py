@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import yaml
 
@@ -31,12 +31,12 @@ PARSERS = {
 }
 
 
-def get_parser(name):
+def get_parser(name: str) -> Any:
     """Retrieve a parser by name."""
     return PARSERS.get(name)
 
 
-def load_platforms(file_path: str | Path = 'platforms.yml') -> dict[str, list[dict]]:
+def load_platforms(file_path: str | Path = 'platforms.yml') -> dict[str, list[dict[str, Any]]]:
     """Load the per-platform routing config."""
     with open(file_path, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f) or {}
@@ -45,7 +45,7 @@ def load_platforms(file_path: str | Path = 'platforms.yml') -> dict[str, list[di
     return data
 
 
-def _build_platform_config(entry: dict) -> tuple[str, PlatformConfig]:
+def _build_platform_config(entry: dict[str, Any]) -> tuple[str, PlatformConfig]:
     """Pull the source id and the typed config out of one platforms.yml entry."""
     extras = {
         k: v for k, v in entry.items()
@@ -72,7 +72,7 @@ def _print_source_header(index: int, source_id: str, config: PlatformConfig) -> 
     print(f"[{config.type}]")
 
 
-def _tag_links(entries_out, source) -> tuple[int, int]:
+def _tag_links(entries_out: list[dict[str, Any]], source: Source) -> tuple[int, int]:
     """Default source_id + requires_auth on every link.
 
     Scrapers may override either by setting them explicitly on the link
@@ -91,8 +91,8 @@ def _tag_links(entries_out, source) -> tuple[int, int]:
 
 
 def process_platforms(
-    platforms: dict[str, list[dict]],
-    registry,
+    platforms: dict[str, list[dict[str, Any]]],
+    registry: Any,
     ctx: BuildContext,
     source_filter: Iterable[str] | None = None,
 ) -> dict[str, dict[str, int]]:
@@ -182,7 +182,7 @@ def make(
     print("Database created successfully.")
 
 
-def _parse_args(argv: list[str]) -> dict:
+def _parse_args(argv: list[str]) -> dict[str, Any]:
     args = argv[1:] if len(argv) > 1 else []
     out = {
         'use_cached': '--use-cached' in args,

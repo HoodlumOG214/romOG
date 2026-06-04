@@ -1,18 +1,19 @@
 """
-This module provides functionality to parse and update entries based on ROM data 
+This module provides functionality to parse and update entries based on ROM data
 extracted from XML files in the MAME software directory.
 """
 import os
 import xml.etree.ElementTree as ET
+from typing import Any
 
 # Directory containing XML files with MAME software data
 XMLS_DIR = 'data/mame/hash'
 
 # Global dictionary to store ROMs data
-roms = None
+roms: dict[str, str] | None = None
 
 
-def load_roms():
+def load_roms() -> None:
     """Load ROM data from XML files in the specified directory."""
     global roms
     roms = {}
@@ -28,14 +29,19 @@ def load_roms():
 
         for software in root.findall('software'):
             name = software.get('name')
-            description = software.find('description').text
-            roms[name] = description
+            desc_elem = software.find('description')
+            description = desc_elem.text if desc_elem is not None else None
+            if name is not None and description is not None:
+                roms[name] = description
 
 
-def parse(entries, flags):
+def parse(entries: list[dict[str, Any]], flags: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse a list of entries and update their titles based on ROM data."""
     if not roms:
         load_roms()
+
+    if roms is None:
+        return entries
 
     for entry in entries:
         # Check if the entry's title matches a ROM name

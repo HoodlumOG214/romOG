@@ -17,16 +17,17 @@ from utils import cache_manager
 from utils.scrape_utils import fetch_url
 from utils.parse_utils import size_bytes_to_str, size_str_to_bytes, join_urls
 
-from core.contract import BuildContext, PlatformConfig, Source, SourceManifest
+from typing import Any
+from core.contract import BuildContext, PlatformConfig, SourceManifest
 
 
 HOST_NAME = 'Internet Archive'
 LOGIN_URL = 'https://archive.org/account/login'
 
-session = None
+session: Any = None
 
 
-def get_login_session(creds_path='secrets/internet_archive_creds.json'):
+def get_login_session(creds_path: str = 'secrets/internet_archive_creds.json') -> Any:
     """Create and return a session logged into the Internet Archive."""
     try:
         with open(creds_path, 'r') as f:
@@ -52,7 +53,7 @@ def get_login_session(creds_path='secrets/internet_archive_creds.json'):
         return None
 
 
-def extract_entries(response, source, platform, base_url, debug=False):
+def extract_entries(response: str, source: dict[str, Any], platform: str, base_url: str, debug: bool = False) -> list[dict[str, Any]]:
     """Extract entries from the HTML response using regex."""
     entries = []
     matches = []
@@ -116,7 +117,7 @@ def extract_entries(response, source, platform, base_url, debug=False):
     return entries
 
 
-def create_entry(link, filename, title, size_str, source, platform, base_url):
+def create_entry(link: str, filename: str, title: str, size_str: str, source: dict[str, Any], platform: str, base_url: str) -> dict[str, Any]:
     """Create a dictionary representing a single entry."""
     name = html.unescape(title)
     size = size_str_to_bytes(size_str)
@@ -143,7 +144,7 @@ def create_entry(link, filename, title, size_str, source, platform, base_url):
     }
 
 
-def fetch_response(url, session, use_cached):
+def fetch_response(url: str, session: Any, use_cached: bool) -> str | None:
     """Fetch the response from a URL, optionally using a cached version."""
     url_stripped = url.rstrip('/')
     short_url = url_stripped.split('/')[-1][:50] if '/' in url_stripped else url_stripped[:50]
@@ -158,7 +159,7 @@ def fetch_response(url, session, use_cached):
     return fetch_url(url, session)
 
 
-def scrape(source, platform, use_cached=False):
+def scrape(source: dict[str, Any], platform: str, use_cached: bool = False) -> list[dict[str, Any]]:
     """Scrapes entries from the Internet Archive based on the source configuration."""
     global session
 
@@ -218,7 +219,7 @@ class InternetArchiveSource:
         platform: str,
         config: PlatformConfig,
         ctx: BuildContext,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         return scrape(config.to_legacy_dict(), platform, ctx.use_cached)
 
 

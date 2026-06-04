@@ -18,19 +18,19 @@ if not os.path.exists(CACHE_DIRNAME):
     os.mkdir(CACHE_DIRNAME)
 
 
-def get_cached_response_filename(url):
+def get_cached_response_filename(url: str) -> str:
     """Generate a safe filename for caching a response based on the given URL."""
     return re.sub(r"[\\/:\*\?\"<>|]", '_', url)
 
 
-def cache_response(url, response):
+def cache_response(url: str, response: str) -> None:
     """Cache the response content for a given URL."""
     filename = get_cached_response_filename(url)
     with open(f'{CACHE_DIRNAME}/{filename}', 'w', encoding='utf-8') as f:
         f.write(response)
 
 
-def get_cached_response(url, max_age_days=CACHE_MAX_AGE_DAYS):
+def get_cached_response(url: str, max_age_days: int = CACHE_MAX_AGE_DAYS) -> str | None:
     """Retrieve the cached response if it exists and is not expired.
 
     Args:
@@ -56,7 +56,7 @@ def get_cached_response(url, max_age_days=CACHE_MAX_AGE_DAYS):
         return f.read()
 
 
-def get_cache_age_days(url):
+def get_cache_age_days(url: str) -> float | None:
     """Get the age of a cached response in days, or None if not cached."""
     filename = get_cached_response_filename(url)
     filepath = f'{CACHE_DIRNAME}/{filename}'

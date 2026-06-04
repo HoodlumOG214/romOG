@@ -1,11 +1,12 @@
 """
-This module provides functionality for parsing and enriching game metadata 
-from libretro DAT files. It includes platform-specific configurations, 
-functions to load and parse DAT files, and methods to enhance game entries 
+This module provides functionality for parsing and enriching game metadata
+from libretro DAT files. It includes platform-specific configurations,
+functions to load and parse DAT files, and methods to enhance game entries
 with ROM IDs and box art URLs.
 """
 import requests
 import re
+from typing import Any
 from urllib.parse import quote, unquote
 from utils.parse_utils import remove_ext
 
@@ -219,6 +220,10 @@ PLATFORMS = {
         'system': 'MAME',
         'dats': []
     },
+    'fbneo': {
+        'system': 'FBNeo - Arcade Games',
+        'dats': []
+    },
     'a26': {
         'system': 'Atari - 2600',
         'dats': [
@@ -313,10 +318,10 @@ PLATFORMS = {
 }
 
 # Global variable to store parsed DATs
-dbs = None
+dbs: dict[str, dict[str, str]] | None = None
 
 
-def load_dbs():
+def load_dbs() -> None:
     """Load and parse the libretro DAT files for each platform."""
     global dbs
     dbs = {}
@@ -351,7 +356,7 @@ def load_dbs():
                         # Save game data if both name and serial are present
                         if 'name' in game and 'serial' in game:
                             # Do not overwrite if present
-                            if not game['name'] in dbs[platform]:
+                            if game['name'] not in dbs[platform]:
                                 dbs[platform][game['name']] = game['serial']
                         game = None
                 elif not in_rom_section:
@@ -363,33 +368,40 @@ def load_dbs():
                             '"', 1)[1].rsplit('"', 1)[0]
 
 
-def parse(entries, flags):
+def parse(entries: list[dict[str, Any]], flags: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse a list of entries and enrich them with ROM IDs and box art URLs."""
     if not dbs:
         load_dbs()
 
+    if dbs is None:
+        return entries
+
     for entry in entries:
-        # Retrieve the database for the platform
-        db = dbs.get(entry['platform'])
-        entry['rom_id'] = db.get(entry['title'])
+        platform_id = entry['platform']
+        platform_info = PLATFORMS.get(platform_id)
 
-        # Construct the URL for box art thumbnails
-        index_url = f"https://thumbnails.libretro.com/{quote(PLATFORMS[entry['platform']]['system'])}/Named_Boxarts/"
+        if not platform_info:
+            continue
 
-        # If box art list is not cached, fetch it from the server
-        if not 'available_boxarts' in PLATFORMS[entry['platform']]:
-            PLATFORMS[entry['platform']]['available_boxarts'] = []
-            r = requests.get(index_url)
+        db = dbs.get(platform_id)
+        entry['rom_id'] = db.get(entry['title']) if db else None
 
-            # Extract box art filenames from the HTML response
-            results = re.findall(
-                r"<tr>.*alt=\"\[IMG\]\".*?href=\"(.*?)\".*?>.*?</tr>", r.text)
-            for result in results:
-                PLATFORMS[entry['platform']]['available_boxarts'].append(
-                    remove_ext(unquote(result)))
+        try:
+            index_url = f"https://thumbnails.libretro.com/{quote(platform_info['system'])}/Named_Boxarts/"
 
-        # Add box art URL if available
-        if entry['title'] in PLATFORMS[entry['platform']]['available_boxarts']:
-            entry['boxart_url'] = f"{index_url}{quote(entry['title'])}.png"
+            if 'available_boxarts' not in platform_info:
+                platform_info['available_boxarts'] = []
+                r = requests.get(index_url, timeout=30)
+
+                results = re.findall(
+                    r"<tr>.*alt=\"\[IMG\]\".*?href=\"(.*?)\".*?>.*?</tr>", r.text)
+                for result in results:
+                    platform_info['available_boxarts'].append(
+                        remove_ext(unquote(result)))
+
+            if entry['title'] in platform_info['available_boxarts']:
+                entry['boxart_url'] = f"{index_url}{quote(entry['title'])}.png"
+        except Exception as e:
+            print(f"Warning: libretro enrichment failed for {platform_id}/{entry.get('title', '?')}: {e}")
 
     return entries

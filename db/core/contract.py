@@ -74,7 +74,7 @@ class Source(Protocol):
         platform: str,
         config: PlatformConfig,
         ctx: BuildContext,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Return entry dicts. Entry shape:
             {
                 'title': str,

@@ -5,11 +5,12 @@ creating slugs, and converting between human-readable and byte-based file sizes.
 """
 import os
 import re
-import urllib
+import urllib.parse
+from typing import Any
 from unidecode import unidecode
 
 
-def replace_invalid_chars(title):
+def replace_invalid_chars(title: str) -> str:
     """Replace invalid characters in a string with valid substitutes."""
     for value1, value2 in {
         '+': 'plus',
@@ -22,7 +23,7 @@ def replace_invalid_chars(title):
     return title
 
 
-def remove_ext(filename):
+def remove_ext(filename: str) -> str:
     """Remove the file extension from a given filename."""
     basename = os.path.basename(filename)
     name, ext = os.path.splitext(basename)
@@ -33,13 +34,13 @@ def remove_ext(filename):
     return name
 
 
-def normalize_repeated_chars(text, char):
+def normalize_repeated_chars(text: str, char: str) -> str:
     """Replace consecutive occurrences of a character with a single instance."""
     escaped_char = re.escape(char)  # Escape special characters for regex
     return re.sub(f'{escaped_char}+', char, text).strip()
 
 
-def create_slug(entry):
+def create_slug(entry: dict[str, Any]) -> str:
     """Create a URL-friendly slug from an entry dictionary."""
     title = entry['title']
 
@@ -55,7 +56,7 @@ def create_slug(entry):
     return slug
 
 
-def create_search_key(title):
+def create_search_key(title: str) -> str:
     """Generate a search-friendly key from the given title by normalizing and sanitizing it."""
     title = replace_invalid_chars(title)
     title = unidecode(title)
@@ -66,7 +67,7 @@ def create_search_key(title):
     return title
 
 
-def size_bytes_to_str(size):
+def size_bytes_to_str(size: int | float) -> str:
     """Convert a size in bytes to a human-readable string with appropriate units."""
     suffixes = ['B', 'K', 'M', 'G', 'T', 'P']
     i = 0
@@ -79,7 +80,7 @@ def size_bytes_to_str(size):
     return '%s%s' % (f, suffixes[i])
 
 
-def size_str_to_bytes(size_str):
+def size_str_to_bytes(size_str: str) -> int:
     """Convert a human-readable size string to bytes."""
     if not size_str or not size_str.strip():
         return 0
@@ -115,7 +116,7 @@ def size_str_to_bytes(size_str):
     return int(size)
 
 
-def join_urls(url, *links):
+def join_urls(url: str, *links: str) -> str:
     """Join a base URL with one or more relative links."""
     for link in links:
         # Ensure proper joining of URLs by stripping and appending slashes

@@ -4,6 +4,7 @@ retrieving box art URLs, and enriching game entries with additional metadata.
 """
 import re
 import xml.etree.ElementTree as ET
+from typing import Any
 from utils.parse_utils import create_search_key
 
 # List of XML filenames containing game data
@@ -219,9 +220,9 @@ BOXART_URL_PLATFORM_PATHS_MAP = {
 GAMETDB_ARTWORK_BASE_URL = 'https://art.gametdb.com'
 
 # Global variable to store parsed TDB data
-tdbs = None
+tdbs: dict[str, list[dict[str, str]]] | None = None
 
-def load_tdbs():
+def load_tdbs() -> None:
     """Load TDB data from XML files into memory."""
     global tdbs
     tdbs = {}
@@ -234,12 +235,17 @@ def load_tdbs():
             tdbs[xml_filename] = []
 
             for game in root.findall('game'):
+                id_elem = game.find('id')
+                type_elem = game.find('type')
+                region_elem = game.find('region')
+                if id_elem is None or type_elem is None or region_elem is None:
+                    continue
                 tdbs[xml_filename].append(
                     {
-                        'name': game.get('name'),
-                        'id': game.find('id').text,
-                        'type': game.find('type').text,
-                        'region': game.find('region').text
+                        'name': game.get('name') or '',
+                        'id': id_elem.text or '',
+                        'type': type_elem.text or '',
+                        'region': region_elem.text or ''
                     }
                 )
         except FileNotFoundError:
@@ -247,7 +253,7 @@ def load_tdbs():
             tdbs[xml_filename] = []
 
 
-def build_boxart_url(platform, country, id):
+def build_boxart_url(platform: str, country: str, id: str) -> str:
     """Build a boxart URL for a specific platform, country, and game ID."""
     file_extension = 'jpg' if platform in (
         '3ds', 'n3ds', 'wiiu', 'ps3') else 'png'
@@ -257,18 +263,24 @@ def build_boxart_url(platform, country, id):
     return f'{GAMETDB_ARTWORK_BASE_URL}/{base_path}/{country}/{id}.{file_extension}'
 
 
-def find_full_id(id, platform):
+def find_full_id(id: str, platform: str) -> str | None:
     """Retrieve the first game ID that contains a the given ID as a substring"""
-    xml_filename = PLATFORM_XML_MAP[platform]
+    if tdbs is None:
+        return None
+    xml_filename = PLATFORM_XML_MAP.get(platform)
+    if not xml_filename:
+        return None
     for game in tdbs[xml_filename]:
         if game['id'].startswith(id):
             return game['id']
     return None
 
 
-def get_boxart_url_by_id(id, platform):
+def get_boxart_url_by_id(id: str, platform: str) -> str | None:
     """Retrieve the boxart URL for a game by its ID and platform."""
-    xml_filename = PLATFORM_XML_MAP[platform]
+    xml_filename = PLATFORM_XML_MAP.get(platform)
+    if not xml_filename:
+        return None
     region_code_pattern = ID_REGION_CODE_PATTERN_MAP[xml_filename]
     valid_id_pattern = SERIAL_GAMETDB_ID_PATTERN_MAP[platform]
 
@@ -295,10 +307,13 @@ def get_boxart_url_by_id(id, platform):
     return boxart_url
 
 
-def parse(entries, flags):
+def parse(entries: list[dict[str, Any]], flags: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse game entries and enrich them with additional data."""
     if not tdbs:
         load_tdbs()
+
+    if tdbs is None:
+        return entries
 
     parse_boxart = flags.get('parse_boxart', True)
     parse_name = flags.get('parse_name', False)
@@ -307,11 +322,13 @@ def parse(entries, flags):
     progress_interval = max(1, total // 10)  # Report every 10%
 
     for i, entry in enumerate(entries):
-        # Print progress every 10%
         if i > 0 and i % progress_interval == 0:
             percent = (i * 100) // total
             print(f"      Enriching entries... {percent}% ({i}/{total})")
-        xml_filename = PLATFORM_XML_MAP[entry['platform']]
+
+        xml_filename = PLATFORM_XML_MAP.get(entry['platform'])
+        if not xml_filename:
+            continue
 
         # If a rom ID is set already, parse the box art URL or name directly
         if entry.get('rom_id'):
