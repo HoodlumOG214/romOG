@@ -3,3 +3,4 @@ cloudscraper
 unidecode
 playwright
 pyyaml
+pytest
