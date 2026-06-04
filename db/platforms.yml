@@ -1264,6 +1264,16 @@ mame:
     mame: {}
     libretro: {}
     no_intro: {}
+fbneo:
+- source: internet_archive
+  format: rom
+  urls:
+  - https://archive.org/download/fbnarcade-fullnonmerged/arcade/
+  filter: (.*)\.zip
+  type: Game
+  parsers:
+    mame: {}
+    libretro: {}
 a26:
 - source: minerva
   format: a26

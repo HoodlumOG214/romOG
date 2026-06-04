@@ -56,6 +56,7 @@ PLATFORMS = {
     'sat': {'brand': 'Sega', 'name': 'Sega Saturn'},
     'dc': {'brand': 'Sega', 'name': 'Dreamcast'},
     'mame': {'brand': 'Arcade', 'name': 'MAME'},
+    'fbneo': {'brand': 'Arcade', 'name': 'FinalBurn Neo'},
     'a26': {'brand': 'Atari', 'name': 'Atari 2600'},
     'a52': {'brand': 'Atari', 'name': 'Atari 5200'},
     'a78': {'brand': 'Atari', 'name': 'Atari 7800'},

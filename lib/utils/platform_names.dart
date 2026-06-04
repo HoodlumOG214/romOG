@@ -103,7 +103,7 @@ class PlatformNames {
     'pc': 'PC',
     'arcade': 'MAME',
     'mame': 'MAME',
-    'fbneo': 'MAME',
+    'fbneo': 'FinalBurn Neo',
   };
 
   static String getDisplayName(String platformId) {
