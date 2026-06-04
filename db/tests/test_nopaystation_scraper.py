@@ -96,7 +96,11 @@ def test_parse_links_missing_url():
 
 # -- parse_response ----------------------------------------------------------
 
-def test_parse_response_basic():
+def test_parse_response_basic(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(nps, 'PS3_RAPS_DIR', str(tmp_path / 'raps'))
+    monkeypatch.setattr(nps, 'PSV_ZRIFS_DIR', str(tmp_path / 'zrifs'))
+    (tmp_path / 'raps').mkdir()
+    (tmp_path / 'zrifs').mkdir()
     entries = parse_response(MOCK_TSV, _source(), 'ps3', 'https://nps.com')
     assert len(entries) == 2
     assert entries[0]['rom_id'] == 'BLUS12345'

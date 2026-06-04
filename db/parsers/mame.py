@@ -37,7 +37,7 @@ def load_roms() -> None:
 
 def parse(entries: list[dict[str, Any]], flags: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse a list of entries and update their titles based on ROM data."""
-    if not roms:
+    if roms is None:
         load_roms()
 
     if roms is None:

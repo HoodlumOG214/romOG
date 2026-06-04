@@ -4,6 +4,8 @@
 *.pyc
 *.swp
 .DS_Store
+.coverage
+.pytest_cache/
 .atom/
 .build/
 .buildlog/
