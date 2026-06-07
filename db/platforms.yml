@@ -3,7 +3,7 @@ nes:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Entertainment%20System/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -22,7 +22,7 @@ fds:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Famicom%20Disk%20System/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -41,7 +41,7 @@ snes:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Super%20Nintendo%20Entertainment%20System/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -60,7 +60,7 @@ gb:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Game%20Boy/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -79,7 +79,7 @@ gbc:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Game%20Boy%20Color/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -98,7 +98,7 @@ gba:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Game%20Boy%20Advance/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -117,7 +117,7 @@ n64:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%2064/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -136,7 +136,7 @@ nds:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20DS/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -157,7 +157,7 @@ dsi:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20DSi/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -167,7 +167,7 @@ min:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Pokemon%20Mini/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -177,7 +177,7 @@ vb:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Virtual%20Boy/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -196,7 +196,7 @@ sms:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Sega%20Master%20System/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -215,7 +215,7 @@ gg:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Sega%20Game%20Gear/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -234,7 +234,7 @@ smd:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Sega%20Genesis/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -253,7 +253,7 @@ smd:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Sega%2032X/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -272,7 +272,7 @@ sg1k:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Sega%20SG-1000/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -282,7 +282,7 @@ a26:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Atari%202600/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -300,7 +300,7 @@ a26:
   format: a26
   urls:
   - https://archive.org/download/nointro.atari-2600/
-  filter: (.*)\.($7z)
+  filter: (.*)\.(7z)
   type: Game
   parsers:
     libretro: {}
@@ -310,7 +310,7 @@ a78:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Atari%207800/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -328,7 +328,7 @@ a78:
   format: a78
   urls:
   - https://archive.org/download/nointro.atari-7800/
-  filter: (.*)\.($7z)
+  filter: (.*)\.(7z)
   type: Game
   parsers:
     libretro: {}
@@ -338,7 +338,7 @@ lynx:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Atari%20Lynx/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -356,7 +356,7 @@ lynx:
   format: lnx
   urls:
   - https://archive.org/download/AtariLynxRomCollectionByGhostware/
-  filter: (.*)\.($lnx)
+  filter: (.*)\.(lnx)
   type: Game
   parsers:
     libretro: {}
@@ -366,7 +366,7 @@ jag:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Atari%20Jaguar/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -385,7 +385,7 @@ tg16:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20NEC%20TurboGrafx-16/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -403,7 +403,7 @@ tg16:
   format: pce
   urls:
   - https://archive.org/download/nointro.tg-16/
-  filter: (.*)\.($7z)
+  filter: (.*)\.(7z)
   type: Game
   parsers:
     libretro: {}
@@ -413,7 +413,7 @@ cv:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Colecovision/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -423,7 +423,7 @@ intv:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Mattel%20Intellivision/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -433,7 +433,7 @@ ngp:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20SNK%20Neo%20Geo%20Pocket/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -443,7 +443,7 @@ ws:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20WonderSwan/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -453,7 +453,7 @@ vec:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20GCE%20Vectrex/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -463,7 +463,7 @@ o2:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Magnavox%20Odyssey%202/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -473,7 +473,7 @@ msx:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Microsoft%20MSX/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -483,7 +483,7 @@ pc88:
   format: zip
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20NEC%20PC-8801/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -493,7 +493,7 @@ gc:
   format: rvz
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20GameCube/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -503,7 +503,7 @@ gc:
   format: rvz
   urls:
   - https://archive.org/download/RetroAchievementsGameCube/
-  filter: (.*)\.($rvz|iso|zip)
+  filter: (.*)\.(rvz|iso|zip)
   type: Game
   parsers:
     libretro: {}
@@ -524,7 +524,7 @@ wii:
   format: rvz
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Nintendo%20Wii/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -534,7 +534,7 @@ wii:
   format: rvz
   urls:
   - https://archive.org/download/RetroAchievementsWii/
-  filter: (.*)\.($rvz|iso|wbfs|zip)
+  filter: (.*)\.(rvz|iso|wbfs|zip)
   type: Game
   parsers:
     libretro: {}
@@ -545,7 +545,7 @@ ps1:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20PlayStation/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -554,7 +554,7 @@ ps1:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsPSX/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
@@ -573,7 +573,7 @@ ps2:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20PlayStation%202/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -582,7 +582,7 @@ ps2:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsPS2A_G/
-  filter: (.*)\.($chd|iso|zip)
+  filter: (.*)\.(chd|iso|zip)
   type: Game
   parsers:
     libretro: {}
@@ -591,7 +591,7 @@ ps2:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsPS2H_R/
-  filter: (.*)\.($chd|iso|zip)
+  filter: (.*)\.(chd|iso|zip)
   type: Game
   parsers:
     libretro: {}
@@ -600,7 +600,7 @@ ps2:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsPS2S_Z/
-  filter: (.*)\.($chd|iso|zip)
+  filter: (.*)\.(chd|iso|zip)
   type: Game
   parsers:
     libretro: {}
@@ -619,7 +619,7 @@ psp:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20PlayStation%20Portable/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -628,7 +628,7 @@ psp:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsPSP/
-  filter: (.*)\.($chd|iso|zip)
+  filter: (.*)\.(chd|iso|zip)
   type: Game
   parsers:
     libretro: {}
@@ -647,7 +647,7 @@ sat:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Sega%20Saturn/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -656,7 +656,7 @@ sat:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSaturn/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
@@ -675,7 +675,7 @@ dc:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Dreamcast/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -684,7 +684,7 @@ dc:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsDreamcast/
-  filter: (.*)\.($chd|zip)
+  filter: (.*)\.(chd|zip)
   type: Game
   parsers:
     libretro: {}
@@ -703,7 +703,7 @@ scd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Sega%20CD/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -712,7 +712,7 @@ scd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSegaCD/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
@@ -731,7 +731,7 @@ tgcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20TurboGrafx%20CD/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -740,7 +740,7 @@ tgcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsTGFXCD/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
@@ -750,7 +750,7 @@ tgcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%203DO%20Interactive%20Multiplayer/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -759,7 +759,7 @@ tgcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievements3DO/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
@@ -769,7 +769,7 @@ jcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Atari%20Jaguar%20CD/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -778,7 +778,7 @@ jcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsJaguarCD/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
@@ -788,7 +788,7 @@ pcfx:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20PC-FX/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -797,7 +797,7 @@ pcfx:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsPCFX/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
@@ -807,7 +807,7 @@ ngcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsSets/RA%20-%20Neo%20Geo%20CD/
-  filter: (.*)\.($zip|7z)
+  filter: (.*)\.(zip|7z)
   type: Game
   parsers:
     libretro: {}
@@ -816,7 +816,7 @@ ngcd:
   format: chd
   urls:
   - https://archive.org/download/RetroAchievementsNeoGeoCD/
-  filter: (.*)\.($chd|zip|bin)
+  filter: (.*)\.(chd|zip|bin)
   type: Game
   parsers:
     libretro: {}
