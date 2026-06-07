@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Build driver. Loads the source registry, walks db/platforms.yml, and runs
-scrape → parse → insert for every (platform, source) pair.
+scrape -> parse -> insert for every (platform, source) pair.
 """
 from __future__ import annotations
 
@@ -161,6 +161,10 @@ def make(
 
     ctx = BuildContext(use_cached=use_cached)
     source_stats = process_platforms(platforms, registry, ctx, source_filter)
+
+    # Post-pass: enrich entries with RA box art and game IDs
+    from scripts.fetch_ra_metadata import fetch_ra_metadata
+    fetch_ra_metadata(db_path=db_manager.DB_TEMP_NAME)
 
     for source_id in registry.ids():
         stats = source_stats.get(source_id)

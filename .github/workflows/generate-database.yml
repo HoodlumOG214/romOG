@@ -58,6 +58,9 @@ jobs:
           fi
 
       - name: Run database generation workflow
+        env:
+          RA_USERNAME: ${{ secrets.RA_USERNAME }}
+          RA_API_KEY: ${{ secrets.RA_API_KEY }}
         run: python workflow.py --skip-minerva
 
       - name: Compress database
