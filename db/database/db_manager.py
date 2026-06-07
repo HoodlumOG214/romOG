@@ -81,6 +81,7 @@ PLATFORMS = {
     'pc88': {'brand': 'NEC', 'name': 'PC-8801'},
     'ws': {'brand': 'Bandai', 'name': 'WonderSwan'},
     'ngp': {'brand': 'SNK', 'name': 'Neo Geo Pocket'},
+    'vec': {'brand': 'GCE', 'name': 'Vectrex'},
 }
 
 REGIONS = {
