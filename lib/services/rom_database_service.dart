@@ -83,7 +83,7 @@ class DatabaseUpdateCheck {
 class RomDatabaseService {
   // Raw GitHub URL for database files in the repository
   static const String _baseUrl =
-      'https://raw.githubusercontent.com/caprado/romgi/main/db';
+      'https://raw.githubusercontent.com/HoodlumOG214/romOG/main/db';
 
   static const String _dbFileName = 'romdb.db';
   static const String _versionFileName = 'version.json';
