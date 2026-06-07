@@ -1,0 +1,8 @@
+id: ra_collection_v5
+name: RetroAchievements Collection v5
+kind: hybrid
+homepage: https://archive.org/details/retroachievements_collection_v5
+auth_required: true
+priority: 50
+capabilities:
+  - download
