@@ -58,7 +58,7 @@ jobs:
           fi
 
       - name: Run database generation workflow
-        run: python workflow.py
+        run: python workflow.py --skip-minerva
 
       - name: Compress database
         run: gzip -f -k romdb.db
