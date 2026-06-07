@@ -25,7 +25,7 @@ from core import load_registry  # noqa: E402
 from core.contract import Source  # noqa: E402
 
 
-EXPECTED_SOURCES = {"internet_archive", "mariocube", "minerva", "nopaystation"}
+EXPECTED_SOURCES = {"internet_archive", "mariocube", "minerva", "nopaystation", "ra_collection_v5"}
 VALID_KINDS = {"catalog", "host", "hybrid"}
 
 
