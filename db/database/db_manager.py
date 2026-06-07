@@ -74,7 +74,7 @@ PLATFORMS = {
     'cdi': {'brand': 'Philips', 'name': 'CD-i'},
     'fmt': {'brand': 'Fujitsu', 'name': 'FM Towns'},
     'ngcd': {'brand': 'SNK', 'name': 'Neo Geo CD'},
-    'pip': {'brand': 'Apple-Bandai', 'name': 'Pippin'}
+    'pip': {'brand': 'Apple-Bandai', 'name': 'Pippin'},
     'sg1k': {'brand': 'Sega', 'name': 'SG-1000'},
     'o2': {'brand': 'Magnavox', 'name': 'Odyssey 2'},
     'msx': {'brand': 'Microsoft', 'name': 'MSX'},
