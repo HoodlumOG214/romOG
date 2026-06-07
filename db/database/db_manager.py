@@ -409,6 +409,12 @@ def _insert_link(entry_slug: str, link: dict[str, Any], *, ignore_duplicates: bo
     ))
 
 
+def commit_database() -> None:
+    """Commit pending writes without closing the connection."""
+    assert con is not None
+    con.commit()
+
+
 def close_database() -> None:
     """Close the database connection and finalize changes."""
     assert con is not None

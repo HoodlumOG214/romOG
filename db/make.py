@@ -163,6 +163,7 @@ def make(
     source_stats = process_platforms(platforms, registry, ctx, source_filter)
 
     # Post-pass: enrich entries with RA box art and game IDs
+    db_manager.commit_database()
     from scripts.fetch_ra_metadata import fetch_ra_metadata
     fetch_ra_metadata(db_path=db_manager.DB_TEMP_NAME)
 
