@@ -1,12 +1,12 @@
 {
-  "version": "20260920",
-  "generated_at": "2026-09-20T02:30:30Z",
+  "version": "20260927",
+  "generated_at": "2026-09-27T02:38:24Z",
   "schema_version": 2,
   "min_app_version": "1.2.0",
-  "size": 4185394,
-  "uncompressed_size": 20336640,
-  "entries": 21704,
-  "links": 26408,
+  "size": 4094611,
+  "uncompressed_size": 19955712,
+  "entries": 21282,
+  "links": 25972,
   "platforms": 41,
   "sources": 5
 }
